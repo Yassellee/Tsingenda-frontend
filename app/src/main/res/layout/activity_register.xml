@@ -135,7 +135,7 @@
     <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@drawable/jiantou"
+        android:src="@drawable/right"
         app:layout_constraintBottom_toBottomOf="@id/regist"
         app:layout_constraintTop_toTopOf="@id/regist"
         app:layout_constraintLeft_toLeftOf="@id/regist"

@@ -15,18 +15,18 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-//import com.alibaba.fastjson.JSON;
-//import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 
 import java.io.IOException;
 import java.util.HashMap;
 
-//import okhttp3.Call;
-//import okhttp3.Callback;
-//import okhttp3.FormBody;
-//import okhttp3.OkHttpClient;
-//import okhttp3.Request;
-//import okhttp3.Response;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class RegisterActivity extends AppCompatActivity {
     private EditText myemail;
@@ -70,40 +70,48 @@ public class RegisterActivity extends AppCompatActivity {
         if(isUserNameAndPwdValid()){
             Intent registerToMain = new Intent(RegisterActivity.this, MainActivity.class);
             startActivity(registerToMain);
-//            FormBody.Builder builder = new FormBody.Builder();
-//            builder.add("email", myemail.getText().toString().trim());
-//            builder.add("password", mypsw.getText().toString().trim());
-//            FormBody formBody = builder.build();
-//            Request request = new Request.Builder()
-//                    .url(getString(R.string.url) + "/register")
-//                    .post(formBody)
-//                    .build();
-//            OkHttpClient client = new OkHttpClient();
-//            Call call = client.newCall(request);
-//            call.enqueue(new Callback()
-//            {
-//                @Override
-//                public void onFailure(Call call, IOException e)
-//                {
-//                    e.printStackTrace();
-//                }
-//                @Override
-//                public void onResponse(Call call, Response response) throws IOException
-//                {
-//                    //此方法运行在子线程中，不能在此方法中进行UI操作。
-//                    if(response.isSuccessful())
-//                    {
-//                        HashMap<String, String> content = JSON.parseObject(response.body().string(), new TypeReference<HashMap<String, String>>(){});
-//                        editor.putString("Token", content.get("Token"));
-//                        editor.putString("email", myemail.getText().toString().trim());
-//                        editor.commit();
-//                        runOnUiThread(() -> {
-//                            Intent registerToMain = new Intent(RegisterActivity.this, LoginActivity.class);
-//                            startActivity(registerToMain);
-//                        });
-//                    }
-//                }
-//            });
+            FormBody.Builder builder = new FormBody.Builder();
+            builder.add("action","register");
+            builder.add("username", myemail.getText().toString().trim());
+            builder.add("password", mypsw.getText().toString().trim());
+            FormBody formBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(getString(R.string.url) + "/tsingenda/login/")
+                    .post(formBody)
+                    .build();
+            OkHttpClient client = new OkHttpClient();
+            Call call = client.newCall(request);
+            call.enqueue(new Callback()
+            {
+                @Override
+                public void onFailure(Call call, IOException e)
+                {
+                    e.printStackTrace();
+                }
+                @Override
+                public void onResponse(Call call, Response response) throws IOException
+                {
+                    //此方法运行在子线程中，不能在此方法中进行UI操作。
+                    if(response.isSuccessful())
+                    {
+                        HashMap<String, String> content = JSON.parseObject(response.body().string(), new TypeReference<HashMap<String, String>>(){});
+                        HashMap<String, String> data = JSON.parseObject(content.get("data"), new TypeReference<HashMap<String, String>>(){});
+                        if(data.get("status")!=null){
+                            runOnUiThread(() -> Toast.makeText(RegisterActivity.this, "用户名或密码错误", Toast.LENGTH_SHORT).show());
+                        }
+                        else{
+                            editor.putString("name", content.get("name"));
+                            editor.putString("avatar", content.get("avatar"));
+                            editor.commit();
+                            runOnUiThread(() -> {
+                                Intent LoginToMain = new Intent(RegisterActivity.this, MainActivity.class);
+                                startActivity(LoginToMain);
+                                finish();
+                            });
+                        }
+                    }
+                }
+            });
 
         }
 
