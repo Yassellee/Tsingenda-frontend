@@ -46,6 +46,7 @@ public class ChangepwdActivity extends AppCompatActivity {
         tologin = (Button)findViewById(R.id.tologin);
         r=(Button)findViewById(R.id.regist);
         r.setOnClickListener(reglistener);
+        tologin.setOnClickListener(reglistener);
         sharedPref = getSharedPreferences("data", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
     }
@@ -68,12 +69,10 @@ public class ChangepwdActivity extends AppCompatActivity {
     }
     public void registerCheck(){
         if(isUserNameAndPwdValid()){
-                Intent registerToMain = new Intent(ChangepwdActivity.this, MainActivity.class);
-            startActivity(registerToMain);
             FormBody.Builder builder = new FormBody.Builder();
-            builder.add("action","forget");
+            builder.add("action","change_password");
             builder.add("username", myemail.getText().toString().trim());
-            builder.add("password", mypsw.getText().toString().trim());
+            builder.add("new_password", mypsw.getText().toString().trim());
             FormBody formBody = builder.build();
             Request request = new Request.Builder()
                     .url(getString(R.string.url) + "/tsingenda/login/")

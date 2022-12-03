@@ -46,6 +46,7 @@ public class RegisterActivity extends AppCompatActivity {
         tologin = (Button)findViewById(R.id.tologin);
         r=(Button)findViewById(R.id.regist);
         r.setOnClickListener(reglistener);
+        tologin.setOnClickListener(reglistener);
         sharedPref = getSharedPreferences("data", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
     }
@@ -68,8 +69,6 @@ public class RegisterActivity extends AppCompatActivity {
     }
     public void registerCheck(){
         if(isUserNameAndPwdValid()){
-            Intent registerToMain = new Intent(RegisterActivity.this, MainActivity.class);
-            startActivity(registerToMain);
             FormBody.Builder builder = new FormBody.Builder();
             builder.add("action","register");
             builder.add("username", myemail.getText().toString().trim());
@@ -97,7 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
                         HashMap<String, String> content = JSON.parseObject(response.body().string(), new TypeReference<HashMap<String, String>>(){});
                         HashMap<String, String> data = JSON.parseObject(content.get("data"), new TypeReference<HashMap<String, String>>(){});
                         if(data.get("status")!=null){
-                            runOnUiThread(() -> Toast.makeText(RegisterActivity.this, "用户名或密码错误", Toast.LENGTH_SHORT).show());
+                            runOnUiThread(() -> Toast.makeText(RegisterActivity.this, "该用户已注册", Toast.LENGTH_SHORT).show());
                         }
                         else{
                             editor.putString("name", content.get("name"));
