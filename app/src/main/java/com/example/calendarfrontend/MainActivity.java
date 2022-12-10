@@ -14,6 +14,8 @@ import android.os.FileObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.tencent.bugly.crashreport.CrashReport;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CrashReport.initCrashReport(getApplicationContext(), "32de36c238", true);
         setContentView(R.layout.activity_main);
         shot = (ImageView)findViewById(R.id.screenshot);
         mFileObserver = new CustomFileObserver(PATH);

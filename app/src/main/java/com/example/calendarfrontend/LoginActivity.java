@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.tencent.bugly.crashreport.CrashReport;
 
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
@@ -41,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        CrashReport.initCrashReport(getApplicationContext(), "32de36c238", true);
         setContentView(R.layout.activity_login);
         myemail = findViewById(R.id.email);
         mypwd = findViewById(R.id.password);

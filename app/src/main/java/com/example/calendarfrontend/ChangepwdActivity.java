@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.tencent.bugly.crashreport.CrashReport;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class ChangepwdActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CrashReport.initCrashReport(getApplicationContext(), "32de36c238", true);
         setContentView(R.layout.activity_register);
         myemail=(EditText)findViewById(R.id.remail);
         mypsw=(EditText)findViewById(R.id.rpassword);
