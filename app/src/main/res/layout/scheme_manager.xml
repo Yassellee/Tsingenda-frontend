@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#ffffff"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp"
+    tools:ignore="HardcodedText, NestedWeights, Autofill">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:background="#808080"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:text="添加日程"
+        android:textColor="#333333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="标题："
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/add_tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入日程标题"
+            android:textSize="18sp"
+            android:inputType="text"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="日期："
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/add_tv_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入日期"
+            android:textSize="18sp"
+            android:inputType="date"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="开始时间："
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+
+        <EditText
+            android:id="@+id/add_tv_startTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="08:00"
+            android:inputType="time"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            tools:ignore="TouchTargetSizeCheck" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="结束时间："
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/add_tv_endTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="23:59"
+            android:textSize="18sp"
+            android:inputType="time"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="地点："
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+
+        <EditText
+            android:id="@+id/add_tv_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="请输入地点"
+            android:inputType="text"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            tools:ignore="TouchTargetSizeCheck" />
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginTop="10dp">
+        <Button
+            android:id="@+id/add_btn_confirm"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:background="#808080"
+            android:text="确认"
+            android:textSize="18sp"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/add_btn_cancel"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:background="#808080"
+            android:text="取消"
+            android:textColor="#333333"
+            android:textSize="18sp" />
+    </RelativeLayout>
+
+</LinearLayout>
