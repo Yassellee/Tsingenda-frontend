@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -77,10 +78,13 @@ public class RegisterActivity extends AppCompatActivity {
             builder.add("password", mypsw.getText().toString().trim());
             FormBody formBody = builder.build();
             Request request = new Request.Builder()
-                    .url(getString(R.string.url) + "/tsingenda/login/")
+                    .url(getString(R.string.neturl) + "/tsingenda/login/")
                     .post(formBody)
                     .build();
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .retryOnConnectionFailure(true)
+                    .cookieJar(new CookieJarManager())//自动管理Cookie
+                    .build();
             Call call = client.newCall(request);
             call.enqueue(new Callback()
             {
@@ -95,6 +99,7 @@ public class RegisterActivity extends AppCompatActivity {
                     //此方法运行在子线程中，不能在此方法中进行UI操作。
                     if(response.isSuccessful())
                     {
+//                        System.out.println(response.body().string());
                         HashMap<String, String> content = JSON.parseObject(response.body().string(), new TypeReference<HashMap<String, String>>(){});
                         HashMap<String, String> data = JSON.parseObject(content.get("data"), new TypeReference<HashMap<String, String>>(){});
                         if(data.get("status")!=null){

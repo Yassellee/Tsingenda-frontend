@@ -120,12 +120,15 @@ public class MainActivity extends AppCompatActivity {
         catch (JSONException e) {
             e.printStackTrace();
         }
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .cookieJar(new CookieJarManager())//自动管理Cookie
+                .build();
         FormBody.Builder builder = new FormBody.Builder();
         Request.Builder reqBuilder = new Request.Builder();
         RequestBody requestBody = RequestBody.create(JSON, String.valueOf(photo));
         Request request = reqBuilder
-                .url(getString(R.string.url)+"/tsingenda/image/")
+                .url(getString(R.string.neturl)+"/tsingenda/image/")
                 .post(requestBody)
                 .build();
         Call call = client.newCall(request);

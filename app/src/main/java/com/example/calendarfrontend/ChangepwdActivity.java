@@ -77,10 +77,13 @@ public class ChangepwdActivity extends AppCompatActivity {
             builder.add("new_password", mypsw.getText().toString().trim());
             FormBody formBody = builder.build();
             Request request = new Request.Builder()
-                    .url(getString(R.string.url) + "/tsingenda/login/")
+                    .url(getString(R.string.neturl) + "/tsingenda/login/")
                     .post(formBody)
                     .build();
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .retryOnConnectionFailure(true)
+                    .cookieJar(new CookieJarManager())//自动管理Cookie
+                    .build();
             Call call = client.newCall(request);
             call.enqueue(new Callback()
             {

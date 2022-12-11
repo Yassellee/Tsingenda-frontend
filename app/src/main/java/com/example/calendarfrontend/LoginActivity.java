@@ -54,7 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         buttonfog.setOnClickListener(mListener);
         sharedPref = getSharedPreferences("data", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-        client = new OkHttpClient();
+        client = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .cookieJar(new CookieJarManager())//自动管理Cookie
+                .build();
     }
     OnClickListener mListener = new OnClickListener() {
         public void onClick(View v){
@@ -84,7 +87,7 @@ public class LoginActivity extends AppCompatActivity {
                 .add("password", userpwd)
                 .build();
         Request request = new Request.Builder()
-                .url(getString(R.string.url)+"/tsingenda/login/")
+                .url(getString(R.string.neturl)+"/tsingenda/login/")
                 .post(body)
                 .build();
         Call call = client.newCall(request);
