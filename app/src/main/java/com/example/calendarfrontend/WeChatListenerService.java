@@ -70,7 +70,7 @@ public class WeChatListenerService extends AccessibilityService {
                         Toast.makeText(this, chatName + "：" + ChatRecord, Toast.LENGTH_SHORT).show();
                         OkHttpClient client = new OkHttpClient.Builder()
                                 .retryOnConnectionFailure(true)
-                                .cookieJar(new CookieJarManager())//自动管理Cookie
+                                .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                                 .build();
                         MediaType JSON = MediaType.parse("application/json;charset=utf-8");
                         JSONArray ja = new JSONArray();

@@ -1,5 +1,7 @@
 package com.example.calendarfrontend;
 
+import static java.lang.Math.min;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -82,9 +84,10 @@ public class MainActivity extends AppCompatActivity implements
     private CustomFileObserver mFileObserver;
     Map<String, String> photomap = new HashMap<String, String>();
 
-    private static final String PATH = Environment.getExternalStorageDirectory() + File.separator
-            + Environment.DIRECTORY_PICTURES + File.separator + "Screenshots" + File.separator;
+//    private static final String PATH = Environment.getExternalStorageDirectory() + File.separator
+//            + Environment.DIRECTORY_PICTURES + File.separator + "Screenshots" + File.separator;
 
+    private  static  final String PATH = "storage/Pictures/Screenshots/";
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -112,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements
         schemeDB = this.openOrCreateDatabase("SchemeDB", Context.MODE_PRIVATE, null);
         DbHandler.createTable(schemeDB, "schemes");
 
+        Toast.makeText(MainActivity.this, PATH, Toast.LENGTH_SHORT).show();
+
         schemeList = DbHandler.fetchScheme(schemeDB, "schemes", mCalendarView.getCurYear(), mCalendarView.getCurMonth(), mCalendarView.getCurDay());
         adapter = new SchemeAdapter(this, R.layout.item, schemeList);
         mlistView.setAdapter(adapter);
@@ -131,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements
                         if(mScheme.getId() != -1) {
                             OkHttpClient client = new OkHttpClient.Builder()
                                     .retryOnConnectionFailure(true)
-                                    .cookieJar(new CookieJarManager())//自动管理Cookie
+                                    .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                                     .build();
                             MediaType JSON = MediaType.parse("application/json;charset=utf-8");
                             JSONObject jo = new JSONObject();
@@ -315,18 +320,19 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         MediaType JSON = MediaType.parse("application/json;charset=utf-8");
+        JSONArray ja = new JSONArray();
+        ja.put(imageToBase64Str(path));
         JSONObject photo = new JSONObject();
         try {
-            photo.put("data",imageToBase64Str(path));
+            photo.put("data",ja);
         }
         catch (JSONException e) {
             e.printStackTrace();
         }
         OkHttpClient client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .cookieJar(new CookieJarManager())//自动管理Cookie
+                .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                 .build();
-        FormBody.Builder builder = new FormBody.Builder();
         Request.Builder reqBuilder = new Request.Builder();
         RequestBody requestBody = RequestBody.create(JSON, String.valueOf(photo));
         Request request = reqBuilder
@@ -352,6 +358,7 @@ public class MainActivity extends AppCompatActivity implements
                 //TODO:add response to user
                 if(response.isSuccessful())
                 {
+                    Toast.makeText(getApplicationContext(),response.toString(),Toast.LENGTH_SHORT).show();
                     try {
                         JSONObject jo = new JSONObject(response.body().string());
                         JSONArray ja = jo.getJSONArray("data");
@@ -374,19 +381,21 @@ public class MainActivity extends AppCompatActivity implements
                         scheme.setStartTime(time1[0] + ":" + time1[1]);
                         scheme.setEndTime(String.valueOf(Integer.parseInt(time1[0]) + 1) + ":" + time1[1]);
                         scheme.setLocation(jo1.getString("location"));
-                        Boolean is_agenda = jo1.getBoolean("is_agenda");
-                        Boolean confidence_high = jo1.getBoolean("confidence_high");
+                        boolean is_agenda = jo1.getBoolean("is_agenda");
+                        boolean confidence_high = jo1.getBoolean("confidence_high");
                         if(confidence_high)
                         {
+                            Toast.makeText(getApplicationContext(),"插入日程",Toast.LENGTH_SHORT).show();
                             DbHandler.insertScheme(schemeDB, "schemes", scheme);
                         } else if(is_agenda){
+                            Toast.makeText(getApplicationContext(),"展示弹窗",Toast.LENGTH_SHORT).show();
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 XPopup.requestOverlayPermission(MainActivity.this, new XPermission.SimpleCallback() {
                                     @Override
                                     public void onGranted() {
                                        new XPopup.Builder(MainActivity.this)
                                                 .isDarkTheme(true)
-                                               .enableShowWhenAppBackground(true)
+                                                .enableShowWhenAppBackground(true)
                                                 .asCustom(new PopupWindow(MainActivity.this, scheme, raw_text))
                                                 .show();
                                     }

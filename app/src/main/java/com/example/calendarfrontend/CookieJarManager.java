@@ -16,6 +16,7 @@ import okhttp3.HttpUrl;
 
 public class CookieJarManager implements CookieJar {
 
+    public static  CookieJarManager cookieJar = new CookieJarManager();
     private final String TAG = "CookieJarManager";
 
     private final HashMap<String, List<Cookie>> cookieStore = new HashMap<>();

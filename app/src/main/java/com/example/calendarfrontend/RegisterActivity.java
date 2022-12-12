@@ -83,7 +83,7 @@ public class RegisterActivity extends AppCompatActivity {
                     .build();
             OkHttpClient client = new OkHttpClient.Builder()
                     .retryOnConnectionFailure(true)
-                    .cookieJar(new CookieJarManager())//自动管理Cookie
+                    .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                     .build();
             Call call = client.newCall(request);
             call.enqueue(new Callback()

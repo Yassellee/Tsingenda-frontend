@@ -68,7 +68,7 @@ public class PopupWindow extends CenterPopupView {
         mEndTime.setText(mScheme.getEndTime());
         client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .cookieJar(new CookieJarManager())//自动管理Cookie
+                .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                 .build();
 
         findViewById(R.id.btn_add).setOnClickListener(v -> {

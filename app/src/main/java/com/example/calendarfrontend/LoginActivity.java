@@ -56,7 +56,7 @@ public class LoginActivity extends AppCompatActivity {
         editor = sharedPref.edit();
         client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .cookieJar(new CookieJarManager())//自动管理Cookie
+                .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
                 .build();
     }
     OnClickListener mListener = new OnClickListener() {
