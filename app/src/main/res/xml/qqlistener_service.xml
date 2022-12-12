@@ -2,8 +2,7 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:description="@string/desc"
     android:notificationTimeout="100"
-    android:packageNames="com.tencent.mm" />
+    android:packageNames="com.tencent.mobileqq" />

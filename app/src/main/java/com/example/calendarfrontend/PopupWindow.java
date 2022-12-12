@@ -12,6 +12,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.lxj.xpopup.core.CenterPopupView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -78,16 +79,32 @@ public class PopupWindow extends CenterPopupView {
             mScheme.setStartTime(mStartTime.getText().toString());
             mScheme.setEndTime(mEndTime.getText().toString());
             String[] date = mDate.getText().toString().split("-");
-            mScheme.setYear(Integer.parseInt(date[0]));
-            mScheme.setMonth(Integer.parseInt(date[1]));
-            mScheme.setDay(Integer.parseInt(date[2]));
+            if(mScheme.getTitle().equals("")) {
+//                Toast.makeText(getContext(), "标题不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(date.length != 3){
+//                Toast.makeText(getContext(), "日期格式错误", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            int year = Integer.parseInt(date[0]);
+            int month = Integer.parseInt(date[1]);
+            int day = Integer.parseInt(date[2]);
+            if(!checkdate(year, month, day)){
+//                Toast.makeText(getContext(), "日期格式错误", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(!checktime(mScheme.getStartTime(), mScheme.getEndTime())){
+//                Toast.makeText(getContext(), "时间格式错误", Toast.LENGTH_SHORT).show();
+                return;
+            }
             DbHandler.insertScheme(MainActivity.schemeDB, "schemes", mScheme);
             // TODO: 反馈给后端
             MediaType JSON = MediaType.parse("application/json;charset=utf-8");
             JSONObject jo = new JSONObject();
             try {
                 jo.put("id", mScheme.getId());
-                jo.put("text", mScheme.getTitle());
+                jo.put("conf_id", mScheme.getConf_id());
                 jo.put("is_agenda", true);
                 jo.put("confidence_high", true);
             } catch (Exception e) {
@@ -95,9 +112,16 @@ public class PopupWindow extends CenterPopupView {
             }
             JSONArray ja = new JSONArray();
             ja.put(jo);
-            RequestBody body = RequestBody.create(JSON, ja.toString());
+            JSONObject feedback = new JSONObject();
+            try {
+                feedback.put("data",ja);
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+            }
+            RequestBody body = RequestBody.create(JSON, feedback.toString());
             Request request = new Request.Builder()
-                    .url(R.string.neturl+"/tsingenda/feedback/")
+                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
                     .post(body)
                     .build();
             Call call = client.newCall(request);
@@ -127,7 +151,7 @@ public class PopupWindow extends CenterPopupView {
             JSONObject jo = new JSONObject();
             try {
                 jo.put("id", mScheme.getId());
-                jo.put("text", mScheme.getTitle());
+                jo.put("conf_id", mScheme.getConf_id());
                 jo.put("is_agenda", true);
                 jo.put("confidence_high", false);
             } catch (Exception e) {
@@ -135,9 +159,16 @@ public class PopupWindow extends CenterPopupView {
             }
             JSONArray ja = new JSONArray();
             ja.put(jo);
-            RequestBody body = RequestBody.create(JSON, ja.toString());
+            JSONObject feedback = new JSONObject();
+            try {
+                feedback.put("data",ja);
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+            }
+            RequestBody body = RequestBody.create(JSON, feedback.toString());
             Request request = new Request.Builder()
-                    .url(R.string.neturl+"/tsingenda/feedback/")
+                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
                     .post(body)
                     .build();
             Call call = client.newCall(request);
@@ -167,7 +198,7 @@ public class PopupWindow extends CenterPopupView {
             JSONObject jo = new JSONObject();
             try {
                 jo.put("id", mScheme.getId());
-                jo.put("text", mScheme.getTitle());
+                jo.put("conf_id", mScheme.getConf_id());
                 jo.put("is_agenda", false);
                 jo.put("confidence_high", false);
             } catch (Exception e) {
@@ -175,15 +206,16 @@ public class PopupWindow extends CenterPopupView {
             }
             JSONArray ja = new JSONArray();
             ja.put(jo);
-            JSONObject jo2 = new JSONObject();
+            JSONObject feedback = new JSONObject();
             try {
-                jo2.put("data", ja);
-            } catch (Exception e) {
+                feedback.put("data",ja);
+            }
+            catch (JSONException e) {
                 e.printStackTrace();
             }
-            RequestBody body = RequestBody.create(JSON, jo2.toString());
+            RequestBody body = RequestBody.create(JSON, feedback.toString());
             Request request = new Request.Builder()
-                    .url(R.string.neturl+"/tsingenda/feedback/")
+                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
                     .post(body)
                     .build();
             Call call = client.newCall(request);
@@ -206,5 +238,34 @@ public class PopupWindow extends CenterPopupView {
             });
             dismiss();
         });
+    }
+
+    private boolean checkdate(int year, int month, int day) {
+        int[] maxdays = {31,29,31,30,31,30,31,31,30,31,30,31};
+        if(year < 0 || month < 0 || month > 12 || day < 0 || day > maxdays[month - 1]) {
+            return false;
+        }
+        if(month == 2 && day == 29) {
+            return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+        }
+        return true;
+    }
+    private boolean checktime(String time1, String time2) {
+        String[] time1s = time1.split(":");
+        String[] time2s = time2.split(":");
+        if(time1s.length != 2 || time2s.length != 2) {
+            return false;
+        }
+        int hour1 = Integer.parseInt(time1s[0]);
+        int minute1 = Integer.parseInt(time1s[1]);
+        int hour2 = Integer.parseInt(time2s[0]);
+        int minute2 = Integer.parseInt(time2s[1]);
+        if(hour1 < 0 || hour1 > 23 || hour2 < 0 || hour2 > 23 || minute1 < 0 || minute1 > 59 || minute2 < 0 || minute2 > 59) {
+            return false;
+        }
+        if(hour1 > hour2 || (hour1 == hour2 && minute1 > minute2)) {
+            return false;
+        }
+        return true;
     }
 }

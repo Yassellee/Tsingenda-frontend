@@ -30,7 +30,7 @@ public class AddSchemePopup extends CenterPopupView {
         mStartTime = findViewById(R.id.add_tv_startTime);
         mEndTime = findViewById(R.id.add_tv_endTime);
 
-        mDate.setText(MainActivity.mCalendarView.getSelectedCalendar().getYear() + "-" + MainActivity.mCalendarView.getSelectedCalendar().getMonth() + "-" + MainActivity.mCalendarView.getSelectedCalendar().getDay());
+        mDate.setText(MainActivity.selectedYear + "-" + MainActivity.selectedMonth + "-" + MainActivity.selectedDay);
         mLocation.setText("待定");
         mStartTime.setText("00:00");
         mEndTime.setText("23:59");

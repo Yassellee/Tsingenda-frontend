@@ -38,6 +38,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.haibin.calendarview.Calendar;
 import com.haibin.calendarview.CalendarView;
 import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.lxj.xpopup.util.XPermission;
 import com.lxj.xpopupext.listener.TimePickerListener;
@@ -88,7 +89,10 @@ public class MainActivity extends AppCompatActivity implements
     public static List<Scheme> schemeList = new ArrayList<>();
     public static SchemeAdapter adapter;
     public static SQLiteDatabase schemeDB;
-    public static CalendarView mCalendarView;
+    private CalendarView mCalendarView;
+    public static int selectedYear;
+    public static int selectedMonth;
+    public static int selectedDay;
     private IntentFilter filter;
     private SmsReceiver receiver;
 
@@ -101,7 +105,6 @@ public class MainActivity extends AppCompatActivity implements
     private static final String PATH = Environment.getExternalStorageDirectory() + File.separator
             + Environment.DIRECTORY_PICTURES + File.separator + "Screenshots" + File.separator;
 
-//    private  static  final String PATH = "storage/Pictures/Screenshots/";
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -168,13 +171,16 @@ public class MainActivity extends AppCompatActivity implements
         mCalendarView.setOnYearChangeListener(this);
         mCurrentMonth.setText(String.format("%d年%d月", mCalendarView.getCurYear(), mCalendarView.getCurMonth()));
         mTextCurrentDay.setText(String.valueOf(mCalendarView.getCurDay()));
+        selectedYear = mCalendarView.getCurYear();
+        selectedMonth = mCalendarView.getCurMonth();
+        selectedDay = mCalendarView.getCurDay();
 
         schemeDB = this.openOrCreateDatabase("SchemeDB", Context.MODE_PRIVATE, null);
         DbHandler.createTable(schemeDB, "schemes");
 
         Toast.makeText(MainActivity.this, PATH, Toast.LENGTH_SHORT).show();
 
-        schemeList = DbHandler.fetchScheme(schemeDB, "schemes", mCalendarView.getCurYear(), mCalendarView.getCurMonth(), mCalendarView.getCurDay());
+        schemeList = DbHandler.fetchScheme(schemeDB, "schemes", selectedYear, selectedMonth, selectedDay);
         adapter = new SchemeAdapter(this, R.layout.item, schemeList);
         mlistView.setAdapter(adapter);
         mlistView.setOnItemClickListener((parent, view, position, id) -> {
@@ -184,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements
                     .show();
         });
         mlistView.setOnItemLongClickListener((parent, view, position, id) -> {
-            new XPopup.Builder(this)
+            new XPopup.Builder(MainActivity.this)
                     .isDarkTheme(true)
                     .maxWidth(800)
                     .asConfirm("确定删除该日程吗？", "", () -> {
@@ -199,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements
                             JSONObject jo = new JSONObject();
                             try {
                                 jo.put("id", mScheme.getId());
-                                jo.put("text", mScheme.getTitle());
+                                jo.put("conf_id", mScheme.getConf_id());
                                 jo.put("is_agenda", false);
                                 jo.put("confidence_high", false);
                             } catch (Exception e) {
@@ -207,9 +213,16 @@ public class MainActivity extends AppCompatActivity implements
                             }
                             JSONArray ja = new JSONArray();
                             ja.put(jo);
-                            RequestBody body = RequestBody.create(JSON, ja.toString());
+                            JSONObject feedback = new JSONObject();
+                            try {
+                                feedback.put("data",ja);
+                            }
+                            catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            RequestBody body = RequestBody.create(JSON, feedback.toString());
                             Request request = new Request.Builder()
-                                    .url(R.string.neturl+"/tsingenda/feedback/")
+                                    .url(getString(R.string.neturl)+"/tsingenda/feedback/")
                                     .post(body)
                                     .build();
                             Call call = client.newCall(request);
@@ -418,39 +431,76 @@ public class MainActivity extends AppCompatActivity implements
                 {
                     try {
                         JSONObject jo = new JSONObject(response.body().string());
-                        JSONArray ja = jo.getJSONArray("data");
-                        JSONArray ja1 = ja.getJSONArray(0);
-                        JSONObject jo1 = ja1.getJSONObject(0);
-                        String raw_text = jo1.getString("raw_text");
+                        JSONArray dataArray = jo.getJSONArray("data");
+                        JSONObject data = dataArray.getJSONObject(0);
+
+                        String raw_text = data.getString("raw_text");
                         Scheme scheme = new Scheme();
-                        scheme.setId(jo1.getInt("id"));
-                        scheme.setConf_id(jo1.getInt("conf_id"));
-                        scheme.setTitle(jo1.getString("title"));
-                        JSONArray ja2 = jo1.getJSONArray("dates");
-                        String date = ja2.getString(1);
-                        String[] date1 = date.split("-");
-                        scheme.setYear(Integer.parseInt(date1[0]));
-                        scheme.setMonth(Integer.parseInt(date1[1]));
-                        scheme.setDay(Integer.parseInt(date1[2]));
-                        JSONArray ja3 = jo1.getJSONArray("times");
-                        String time = ja3.getString(1);
-                        String[] time1 = time.split(":");
-                        scheme.setStartTime(time1[0] + ":" + time1[1]);
-                        scheme.setEndTime(String.valueOf(Integer.parseInt(time1[0]) + 1) + ":" + time1[1]);
-                        scheme.setLocation(jo1.getString("location"));
-                        boolean is_agenda = jo1.getBoolean("is_agenda");
-                        boolean confidence_high = jo1.getBoolean("confidence_high");
+                        scheme.setId(data.getInt("id"));
+                        scheme.setConf_id(data.getInt("conf_id"));
+                        scheme.setTitle(data.getString("title"));
+
+                        JSONArray dates = data.getJSONArray("dates");
+                        if(dates.length() == 0){
+                            scheme.setYear(2022);
+                            scheme.setMonth(12);
+                            scheme.setDay(13);
+                        } else {
+                            JSONArray date = dates.getJSONArray(0);
+                            if(date.length() <= 1){
+                                scheme.setYear(2022);
+                                scheme.setMonth(12);
+                                scheme.setDay(13);
+                            } else {
+                                String Nums = date.getString(1);
+                                String[] Num = Nums.split("-");
+                                scheme.setYear(Integer.parseInt(Num[0]));
+                                scheme.setMonth(Integer.parseInt(Num[1]));
+                                scheme.setDay(Integer.parseInt(Num[2]));
+                            }
+                        }
+                        JSONArray times = data.getJSONArray("times");
+                        if(times.length() == 0){
+                            scheme.setStartTime("00:00");
+                            scheme.setEndTime("23:59");
+                        } else {
+                            JSONArray time = times.getJSONArray(0);
+                            if(time.length() == 0){
+                                scheme.setStartTime("00:00");
+                                scheme.setEndTime("23:59");
+                            } else {
+                                String Nums = time.getString(1);
+                                String[] Num = Nums.split(":");
+                                scheme.setStartTime(Nums);
+                                if(Integer.parseInt(Num[0]) < 23){
+                                    scheme.setEndTime(String.valueOf(Integer.parseInt(Num[0])+1) + ":" + Num[1]);
+                                } else {
+                                    scheme.setEndTime("23:59");
+                                }
+                            }
+                        }
+                        JSONArray locations = data.getJSONArray("locations");
+                        if(locations.length() == 0){
+                            scheme.setLocation("未知");
+                        } else {
+                            String location = locations.getString(0);
+                            scheme.setLocation(location);
+                        }
+                        boolean is_agenda = data.getBoolean("is_agenda");
+                        boolean confidence_high = data.getBoolean("confidence_high");
                         if(confidence_high)
                         {
-                            Toast.makeText(getApplicationContext(),"插入日程",Toast.LENGTH_SHORT).show();
                             DbHandler.insertScheme(schemeDB, "schemes", scheme);
+                            if(scheme.getYear() ==selectedYear && scheme.getMonth() == selectedMonth && scheme.getDay() == selectedDay){
+                                schemeList.add(scheme);
+                                adapter.notifyDataSetChanged();
+                            }
                         } else if(is_agenda){
-                            Toast.makeText(getApplicationContext(),"展示弹窗",Toast.LENGTH_SHORT).show();
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 XPopup.requestOverlayPermission(MainActivity.this, new XPermission.SimpleCallback() {
                                     @Override
                                     public void onGranted() {
-                                       new XPopup.Builder(MainActivity.this)
+                                        new XPopup.Builder(MainActivity.this)
                                                 .isDarkTheme(true)
                                                 .enableShowWhenAppBackground(true)
                                                 .asCustom(new PopupWindow(MainActivity.this, scheme, raw_text))
@@ -458,7 +508,6 @@ public class MainActivity extends AppCompatActivity implements
                                     }
                                     @Override
                                     public void onDenied() {
-                                        Toast.makeText(MainActivity.this, "没有权限无法显示弹窗", Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
@@ -566,6 +615,9 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             mFrameLayout.setVisibility(View.VISIBLE);
         }
+        selectedYear = calendar.getYear();
+        selectedMonth = calendar.getMonth();
+        selectedDay = calendar.getDay();
         schemeList.clear();
         schemeList.addAll(DbHandler.fetchScheme(schemeDB, "schemes", calendar.getYear(), calendar.getMonth(), calendar.getDay()));
         adapter.notifyDataSetChanged();

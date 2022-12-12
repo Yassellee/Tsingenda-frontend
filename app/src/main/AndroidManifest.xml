@@ -31,7 +31,7 @@
         android:theme="@style/Theme.CalendarFrontend"
         tools:targetApi="31">
         <service
-            android:name=".WeChatListenerService"
+            android:name=".QQListenerService"
             android:enabled="true"
             android:exported="true"
             android:label="Tsingenda"
@@ -42,7 +42,7 @@
 
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/wechat_service" />
+                android:resource="@xml/qqlistener_service" />
         </service>
 
         <activity
