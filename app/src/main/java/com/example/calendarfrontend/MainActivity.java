@@ -10,8 +10,10 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -20,6 +22,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
+import android.provider.Settings;
+import android.telephony.SmsMessage;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -37,8 +42,13 @@ import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 import com.lxj.xpopup.util.XPermission;
 import com.lxj.xpopupext.listener.TimePickerListener;
 import com.lxj.xpopupext.popup.TimePickerPopup;
+import com.lzf.easyfloat.EasyFloat;
+import com.lzf.easyfloat.enums.ShowPattern;
+import com.lzf.easyfloat.interfaces.OnFloatCallbacks;
+import com.lzf.easyfloat.permission.PermissionUtils;
 import com.tencent.bugly.crashreport.CrashReport;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -79,7 +89,10 @@ public class MainActivity extends AppCompatActivity implements
     public static SchemeAdapter adapter;
     public static SQLiteDatabase schemeDB;
     public static CalendarView mCalendarView;
+    private IntentFilter filter;
+    private SmsReceiver receiver;
 
+    private static final int REQUEST_CODE_FOR_OVERLAY_PERMISSION = 0x201;
     private final String TAG = "Screenshot";
 //    private ImageView shot;
     private CustomFileObserver mFileObserver;
@@ -93,8 +106,40 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getReadPermissions();
+        EasyFloat.with(this)
+        // 设置浮窗显示类型，默认只在当前Activity显示，可选一直显示、仅前台显示
+        .setShowPattern(ShowPattern.ALL_TIME).setLayout(R.layout.floattab)
+                // 设置浮窗是否可拖拽
+                .setDragEnable(true)
+                .registerCallbacks(new OnFloatCallbacks() {
+                    @Override
+                    public void createdResult(boolean isCreated, @Nullable String msg, @Nullable View view) { }
+
+                    @Override
+                    public void show(@NotNull View view) {
+                    }
+
+                    @Override
+                    public void hide(@NotNull View view) { }
+
+                    @Override
+                    public void dismiss() { }
+
+                    @Override
+                    public void touchEvent(@NotNull View view, @NotNull MotionEvent event) { }
+
+                    @Override
+                    public void drag(@NotNull View view, @NotNull MotionEvent event) { }
+
+                    @Override
+                    public void dragEnd(@NotNull View view) { }
+                })
+                .show();
         CrashReport.initCrashReport(getApplicationContext(), "32de36c238", true);
         setContentView(R.layout.activity_main);
+//        Intent it=new Intent(this, CheckPicService.class);
+//        startService(it);
 //        shot = (ImageView)findViewById(R.id.screenshot);
         mFileObserver = new CustomFileObserver(PATH);
         verifyStoragePermissions(MainActivity.this);
@@ -284,9 +329,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-        mFileObserver.stopWatching();
     }
-
     /**
      * 目录监听器
      */
@@ -320,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements
         //判断文件夹中是否有文件存在
         File file = new File(path);
         if (!file.exists()){
-            runOnUiThread(() -> Toast.makeText(MainActivity.this, "图片不存在", Toast.LENGTH_SHORT).show());
+//            runOnUiThread(() -> Toast.makeText(MainActivity.this, "图片不存在", Toast.LENGTH_SHORT).show());
         }
         else {
 //            runOnUiThread(() -> shot.setImageURI(Uri.fromFile(file)));
@@ -373,7 +416,6 @@ public class MainActivity extends AppCompatActivity implements
                 //TODO:add response to user
                 if(response.isSuccessful())
                 {
-                    Toast.makeText(getApplicationContext(),response.toString(),Toast.LENGTH_SHORT).show();
                     try {
                         JSONObject jo = new JSONObject(response.body().string());
                         JSONArray ja = jo.getJSONArray("data");
@@ -472,6 +514,31 @@ public class MainActivity extends AppCompatActivity implements
             System.out.println("you have all the permissions");
         }
     }
+    private void getReadPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED
+                    | ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECEIVE_SMS) | ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {//是否请求过该权限
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.RECEIVE_SMS,
+                                    Manifest.permission.READ_SMS,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE}, 10001);
+                } else {//没有则请求获取权限，示例权限是：存储权限和短信权限，需要其他权限请更改或者替换
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.RECEIVE_SMS,
+                                    Manifest.permission.READ_SMS,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, 10001);
+                }
+            } else {//如果已经获取到了权限则直接进行下一步操作
+                filter = new IntentFilter();
+                filter.addAction("android.provider.Telephony.SMS_RECEIVED" );
+                receiver=new SmsReceiver();
+                registerReceiver(receiver,filter);//注册广播接收器
+            }
+        }
+    }
 
     // Checks if a volume containing external storage is available
 // for read and write.
@@ -514,3 +581,5 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 }
+
+
