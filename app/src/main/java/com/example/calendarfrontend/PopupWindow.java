@@ -4,17 +4,22 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.lxj.xpopup.core.CenterPopupView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.HashMap;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Call;
@@ -28,12 +33,15 @@ import okhttp3.Response;
 @SuppressLint("ViewConstructor")
 public class PopupWindow extends CenterPopupView {
     private final Scheme mScheme;
+    private final String raw_text;
+    private TextView mSource;
     private EditText mTitle, mDate, mLocation, mStartTime, mEndTime;
     private OkHttpClient client;
 
-    public PopupWindow(Context context, Scheme scheme) {
+    public PopupWindow(Context context, Scheme scheme, String raw_text) {
         super(context);
         mScheme = scheme;
+        this.raw_text = raw_text;
     }
 
     @Override
@@ -45,11 +53,14 @@ public class PopupWindow extends CenterPopupView {
     @Override
     protected void onCreate() {
         super.onCreate();
+        mSource = findViewById(R.id.tv_source);
         mTitle = findViewById(R.id.tv_title);
         mDate = findViewById(R.id.tv_date);
         mLocation = findViewById(R.id.tv_location);
         mStartTime = findViewById(R.id.tv_startTime);
         mEndTime = findViewById(R.id.tv_endTime);
+
+        mSource.setText(raw_text);
         mTitle.setText(mScheme.getTitle());
         mDate.setText(mScheme.getYear() + "-" + mScheme.getMonth() + "-" + mScheme.getDay());
         mLocation.setText(mScheme.getLocation());
@@ -72,13 +83,19 @@ public class PopupWindow extends CenterPopupView {
             mScheme.setDay(Integer.parseInt(date[2]));
             DbHandler.insertScheme(MainActivity.schemeDB, "schemes", mScheme);
             // TODO: 反馈给后端
-            FormBody.Builder builder = new FormBody.Builder();
-            RequestBody body = new FormBody.Builder()
-                    .add("id", String.valueOf(mScheme.getId()))
-                    .add("text", mScheme.getTitle())
-                    .add("is_agenda", String.valueOf(true))
-                    .add("confidence_high", String.valueOf(true))
-                    .build();
+            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jo = new JSONObject();
+            try {
+                jo.put("id", mScheme.getId());
+                jo.put("text", mScheme.getTitle());
+                jo.put("is_agenda", true);
+                jo.put("confidence_high", true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray ja = new JSONArray();
+            ja.put(jo);
+            RequestBody body = RequestBody.create(JSON, ja.toString());
             Request request = new Request.Builder()
                     .url(R.string.neturl+"/tsingenda/feedback/")
                     .post(body)
@@ -106,13 +123,19 @@ public class PopupWindow extends CenterPopupView {
         findViewById(R.id.btn_ignore).setOnClickListener(v -> {
             // 忽略日程
             // TODO: 反馈给后端
-            FormBody.Builder builder = new FormBody.Builder();
-            RequestBody body = new FormBody.Builder()
-                    .add("id", String.valueOf(mScheme.getId()))
-                    .add("text", mScheme.getTitle())
-                    .add("is_agenda", String.valueOf(true))
-                    .add("confidence_high", String.valueOf(false))
-                    .build();
+            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jo = new JSONObject();
+            try {
+                jo.put("id", mScheme.getId());
+                jo.put("text", mScheme.getTitle());
+                jo.put("is_agenda", true);
+                jo.put("confidence_high", false);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray ja = new JSONArray();
+            ja.put(jo);
+            RequestBody body = RequestBody.create(JSON, ja.toString());
             Request request = new Request.Builder()
                     .url(R.string.neturl+"/tsingenda/feedback/")
                     .post(body)
@@ -140,13 +163,25 @@ public class PopupWindow extends CenterPopupView {
         findViewById(R.id.btn_ignore).setOnClickListener(v -> {
             // 不是日程
             // TODO: 反馈给后端
-            FormBody.Builder builder = new FormBody.Builder();
-            RequestBody body = new FormBody.Builder()
-                    .add("id", String.valueOf(mScheme.getId()))
-                    .add("text", mScheme.getTitle())
-                    .add("is_agenda", String.valueOf(false))
-                    .add("confidence_high", String.valueOf(false))
-                    .build();
+            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jo = new JSONObject();
+            try {
+                jo.put("id", mScheme.getId());
+                jo.put("text", mScheme.getTitle());
+                jo.put("is_agenda", false);
+                jo.put("confidence_high", false);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray ja = new JSONArray();
+            ja.put(jo);
+            JSONObject jo2 = new JSONObject();
+            try {
+                jo2.put("data", ja);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            RequestBody body = RequestBody.create(JSON, jo2.toString());
             Request request = new Request.Builder()
                     .url(R.string.neturl+"/tsingenda/feedback/")
                     .post(body)

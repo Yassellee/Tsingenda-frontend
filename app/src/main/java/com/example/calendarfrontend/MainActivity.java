@@ -8,12 +8,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileObserver;
+import android.os.Handler;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -21,15 +24,19 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.haibin.calendarview.Calendar;
 import com.haibin.calendarview.CalendarView;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnInputConfirmListener;
+import com.lxj.xpopup.util.XPermission;
 import com.lxj.xpopupext.listener.TimePickerListener;
 import com.lxj.xpopupext.popup.TimePickerPopup;
 import com.tencent.bugly.crashreport.CrashReport;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -126,27 +133,37 @@ public class MainActivity extends AppCompatActivity implements
                                     .retryOnConnectionFailure(true)
                                     .cookieJar(new CookieJarManager())//自动管理Cookie
                                     .build();
-                            FormBody.Builder builder = new FormBody.Builder();
-                            RequestBody body = new FormBody.Builder()
-                                    .add("id", String.valueOf(mScheme.getId()))
-                                    .add("text", mScheme.getTitle())
-                                    .add("is_agenda", String.valueOf(false))
-                                    .add("confidence_high", String.valueOf(false))
-                                    .build();
+                            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
+                            JSONObject jo = new JSONObject();
+                            try {
+                                jo.put("id", mScheme.getId());
+                                jo.put("text", mScheme.getTitle());
+                                jo.put("is_agenda", false);
+                                jo.put("confidence_high", false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            JSONArray ja = new JSONArray();
+                            ja.put(jo);
+                            RequestBody body = RequestBody.create(JSON, ja.toString());
                             Request request = new Request.Builder()
-                                    .url(R.string.neturl + "/tsingenda/feedback/")
+                                    .url(R.string.neturl+"/tsingenda/feedback/")
                                     .post(body)
                                     .build();
                             Call call = client.newCall(request);
-                            call.enqueue(new Callback() {
+                            call.enqueue(new Callback()
+                            {
                                 @Override
-                                public void onFailure(Call call, IOException e) {
+                                public void onFailure(Call call, IOException e)
+                                {
                                     e.printStackTrace();
                                 }
                                 @Override
-                                public void onResponse(Call call, Response response) throws IOException {
+                                public void onResponse(Call call, Response response) throws IOException
+                                {
                                     //此方法运行在子线程中，不能在此方法中进行UI操作。
-                                    if (!response.isSuccessful()) {
+                                    if(!response.isSuccessful())
+                                    {
                                         throw new IOException("Unexpected code " + response);
                                     }
                                 }
@@ -231,9 +248,10 @@ public class MainActivity extends AppCompatActivity implements
                             case 1:
                                 break;
                             case 2:
+                                Intent MaintoLogin=new Intent(MainActivity.this,LoginActivity.class);
+                                startActivity(MaintoLogin);
                                 break;
                         }
-
                     })
                     .show();
         });
@@ -332,6 +350,57 @@ public class MainActivity extends AppCompatActivity implements
             public void onResponse(Call call, Response response) throws IOException {
                 System.out.println(response.toString());
                 //TODO:add response to user
+                if(response.isSuccessful())
+                {
+                    try {
+                        JSONObject jo = new JSONObject(response.body().string());
+                        JSONArray ja = jo.getJSONArray("data");
+                        JSONArray ja1 = ja.getJSONArray(0);
+                        JSONObject jo1 = ja1.getJSONObject(0);
+                        String raw_text = jo1.getString("raw_text");
+                        Scheme scheme = new Scheme();
+                        scheme.setId(jo1.getInt("id"));
+                        scheme.setConf_id(jo1.getInt("conf_id"));
+                        scheme.setTitle(jo1.getString("title"));
+                        JSONArray ja2 = jo1.getJSONArray("dates");
+                        String date = ja2.getString(1);
+                        String[] date1 = date.split("-");
+                        scheme.setYear(Integer.parseInt(date1[0]));
+                        scheme.setMonth(Integer.parseInt(date1[1]));
+                        scheme.setDay(Integer.parseInt(date1[2]));
+                        JSONArray ja3 = jo1.getJSONArray("times");
+                        String time = ja3.getString(1);
+                        String[] time1 = time.split(":");
+                        scheme.setStartTime(time1[0] + ":" + time1[1]);
+                        scheme.setEndTime(String.valueOf(Integer.parseInt(time1[0]) + 1) + ":" + time1[1]);
+                        scheme.setLocation(jo1.getString("location"));
+                        Boolean is_agenda = jo1.getBoolean("is_agenda");
+                        Boolean confidence_high = jo1.getBoolean("confidence_high");
+                        if(confidence_high)
+                        {
+                            DbHandler.insertScheme(schemeDB, "schemes", scheme);
+                        } else if(is_agenda){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                XPopup.requestOverlayPermission(MainActivity.this, new XPermission.SimpleCallback() {
+                                    @Override
+                                    public void onGranted() {
+                                       new XPopup.Builder(MainActivity.this)
+                                                .isDarkTheme(true)
+                                               .enableShowWhenAppBackground(true)
+                                                .asCustom(new PopupWindow(MainActivity.this, scheme, raw_text))
+                                                .show();
+                                    }
+                                    @Override
+                                    public void onDenied() {
+                                        Toast.makeText(MainActivity.this, "没有权限无法显示弹窗", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
     }
