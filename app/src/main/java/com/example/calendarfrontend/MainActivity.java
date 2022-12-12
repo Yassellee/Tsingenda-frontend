@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -84,10 +85,10 @@ public class MainActivity extends AppCompatActivity implements
     private CustomFileObserver mFileObserver;
     Map<String, String> photomap = new HashMap<String, String>();
 
-//    private static final String PATH = Environment.getExternalStorageDirectory() + File.separator
-//            + Environment.DIRECTORY_PICTURES + File.separator + "Screenshots" + File.separator;
+    private static final String PATH = Environment.getExternalStorageDirectory() + File.separator
+            + Environment.DIRECTORY_PICTURES + File.separator + "Screenshots" + File.separator;
 
-    private  static  final String PATH = "storage/Pictures/Screenshots/";
+//    private  static  final String PATH = "storage/Pictures/Screenshots/";
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -97,7 +98,18 @@ public class MainActivity extends AppCompatActivity implements
 //        shot = (ImageView)findViewById(R.id.screenshot);
         mFileObserver = new CustomFileObserver(PATH);
         verifyStoragePermissions(MainActivity.this);
-
+        if(isExternalStorageReadable() && isExternalStorageWritable()){
+            Toast.makeText(MainActivity.this, "yes you can read and write", Toast.LENGTH_SHORT).show();
+        }
+        else if(isExternalStorageReadable()){
+            Toast.makeText(MainActivity.this, "yes you can read", Toast.LENGTH_SHORT).show();
+        }
+        else if(isExternalStorageWritable()){
+            Toast.makeText(MainActivity.this, "yes you can write", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(MainActivity.this, "you can't do anything", Toast.LENGTH_SHORT).show();
+        }
         mCurrentMonth = findViewById(R.id.currentMonth);
         mSearch = findViewById(R.id.search);
         mSetting = findViewById(R.id.setting);
@@ -303,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
+
     private void UpLoadPicture(String path) throws JSONException {
         //判断文件夹中是否有文件存在
         File file = new File(path);
@@ -321,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         MediaType JSON = MediaType.parse("application/json;charset=utf-8");
         JSONArray ja = new JSONArray();
+        System.out.println(imageToBase64Str(path));
         ja.put(imageToBase64Str(path));
         JSONObject photo = new JSONObject();
         try {
@@ -329,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements
         catch (JSONException e) {
             e.printStackTrace();
         }
+        System.out.println(ja);
         OkHttpClient client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
@@ -436,17 +451,38 @@ public class MainActivity extends AppCompatActivity implements
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE };
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.MANAGE_EXTERNAL_STORAGE};
 
     public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have write permission
-        int permission = ActivityCompat.checkSelfPermission(activity,
+        // Check if we have read permission
+        int readpermission = ActivityCompat.checkSelfPermission(activity,
+                Manifest.permission.READ_EXTERNAL_STORAGE);
+        int managepermission = ActivityCompat.checkSelfPermission(activity,
+                Manifest.permission.MANAGE_EXTERNAL_STORAGE);
+        int writepermission = ActivityCompat.checkSelfPermission(activity,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
+        if (writepermission != PackageManager.PERMISSION_GRANTED || readpermission != PackageManager.PERMISSION_GRANTED || managepermission!=PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE);
+            System.out.println("you don't have all the permissions");
         }
+        else {
+            System.out.println("you have all the permissions");
+        }
+    }
+
+    // Checks if a volume containing external storage is available
+// for read and write.
+    private boolean isExternalStorageWritable() {
+        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    }
+
+    // Checks if a volume containing external storage is available to at least read.
+    private boolean isExternalStorageReadable() {
+        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) ||
+                Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED_READ_ONLY);
     }
 
     @Override
