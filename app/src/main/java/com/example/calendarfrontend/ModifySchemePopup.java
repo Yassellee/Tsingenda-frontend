@@ -45,6 +45,7 @@ public class ModifySchemePopup extends CenterPopupView {
         findViewById(R.id.add_btn_confirm).setOnClickListener(v -> {
             // 加入日程
             Scheme newScheme = new Scheme();
+            newScheme.setRaw_text(this.mScheme.getRaw_text());
             newScheme.setTitle(mTitle.getText().toString());
             newScheme.setLocation(mLocation.getText().toString());
             newScheme.setStartTime(mStartTime.getText().toString());

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
@@ -34,137 +35,115 @@ public class SmsReceiver extends BroadcastReceiver {
         String format = intent.getStringExtra("format");
         if (bundle != null) {
             Object[] pdus = (Object[]) bundle.get("pdus");//根据pdus关键字获取短信字节数组，数组内的每个元素都是一条短信
-            for (Object object : pdus) {
-                SmsMessage message= null;//将字节数组转化为Message对象
+            if (pdus.length > 0) {
+                Object obj = pdus[0];
+                SmsMessage message = null;//将字节数组转化为Message对象
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    message = SmsMessage.createFromPdu((byte[])object,format);
+                    message = SmsMessage.createFromPdu((byte[]) obj, format);
                 }
                 sender = message.getOriginatingAddress();//获取短信手机号
                 content.append(message.getMessageBody());//获取短信内容
-                MediaType JSON = MediaType.parse("application/json;charset=utf-8");
-                JSONArray ja = new JSONArray();
-                ja.put(content);
-                JSONObject texttext = new JSONObject();
-                try {
-                    texttext.put("data",ja);
-                }
-                catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                System.out.println(ja);
-                OkHttpClient client = new OkHttpClient.Builder()
-                        .retryOnConnectionFailure(true)
-                        .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
-                        .build();
-                Request.Builder reqBuilder = new Request.Builder();
-                RequestBody requestBody = RequestBody.create(JSON, String.valueOf(texttext));
-                Request request = reqBuilder
-                        .url("http://123.125.240.150:37511/tsingenda/raw_text/")
-                        .post(requestBody)
-                        .build();
-                Call call = client.newCall(request);
-                call.enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
+                if (!MainActivity.lastMessage.toString().equals(content.toString())) {
+                    MainActivity.lastMessage = content;
+                    MediaType parse = MediaType.parse("application/json;charset=utf-8");
+                    JSONArray jSONArray = new JSONArray();
+                    jSONArray.put(content);
+                    JSONObject jSONObject = new JSONObject();
+                    try {
+                        jSONObject.put("data", jSONArray);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
+                    System.out.println(jSONArray);
+                    OkHttpClient build = new OkHttpClient.Builder().retryOnConnectionFailure(true).cookieJar(CookieJarManager.cookieJar).build();
+                    Request.Builder builder = new Request.Builder();
+                    build.newCall(builder.url("http://123.125.240.150:37511/tsingenda/raw_text/").post(RequestBody.create(parse, String.valueOf(jSONObject))).build()).enqueue(new Callback() {
+                        public void onFailure(Call call, IOException iOException) {
+                        }
 
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        System.out.println(response.toString());
-                        //TODO:add response to user
-                        if(response.isSuccessful())
-                        {
-                            try {
-                                JSONObject jo = new JSONObject(response.body().string());
-                                JSONArray dataArray = jo.getJSONArray("data");
-                                JSONObject data = dataArray.getJSONObject(0);
-
-                                String raw_text = data.getString("raw_text");
-                                Scheme scheme = new Scheme();
-                                scheme.setId(data.getInt("id"));
-                                scheme.setConf_id(data.getInt("conf_id"));
-                                scheme.setTitle(data.getString("title"));
-
-                                JSONArray dates = data.getJSONArray("dates");
-                                if(dates.length() == 0){
-                                    scheme.setYear(2022);
-                                    scheme.setMonth(12);
-                                    scheme.setDay(13);
-                                } else {
-                                    JSONArray date = dates.getJSONArray(0);
-                                    if(date.length() == 0){
-                                        scheme.setYear(2022);
-                                        scheme.setMonth(12);
-                                        scheme.setDay(13);
-                                    } else {
-                                        String Nums = date.getString(1);
-                                        String[] Num = Nums.split("-");
-                                        scheme.setYear(Integer.parseInt(Num[0]));
-                                        scheme.setMonth(Integer.parseInt(Num[1]));
-                                        scheme.setDay(Integer.parseInt(Num[2]));
-                                    }
-                                }
-                                JSONArray times = data.getJSONArray("times");
-                                if(times.length() == 0){
-                                    scheme.setStartTime("00:00");
-                                    scheme.setEndTime("23:59");
-                                } else {
-                                    JSONArray time = times.getJSONArray(0);
-                                    if(time.length() == 0){
-                                        scheme.setStartTime("00:00");
-                                        scheme.setEndTime("23:59");
-                                    } else {
-                                        String Nums = time.getString(1);
-                                        String[] Num = Nums.split(":");
-                                        scheme.setStartTime(Nums);
-                                        if(Integer.parseInt(Num[0]) < 23){
-                                            scheme.setEndTime(String.valueOf(Integer.parseInt(Num[0])+1) + ":" + Num[1]);
+                        public void onResponse(Call call, Response response) throws IOException {
+                            System.out.println(response.toString());
+                            if (response.isSuccessful()) {
+                                try {
+                                    JSONArray jSONArray = new JSONObject(response.body().string()).getJSONArray("data");
+                                    if (jSONArray.length() != 0) {
+                                        JSONObject jSONObject = jSONArray.getJSONObject(0);
+                                        Scheme scheme = new Scheme();
+                                        scheme.setId(jSONObject.getInt("id"));
+                                        scheme.setConf_id(jSONObject.getInt("conf_id"));
+                                        scheme.setTitle(jSONObject.getString("title"));
+                                        scheme.setRaw_text(jSONObject.getString("raw_text"));
+                                        JSONArray jSONArray2 = jSONObject.getJSONArray("dates");
+                                        if (jSONArray2.length() == 0) {
+                                            scheme.setYear(2022);
+                                            scheme.setMonth(12);
+                                            scheme.setDay(13);
                                         } else {
-                                            scheme.setEndTime("23:59");
+                                            JSONArray jSONArray3 = jSONArray2.getJSONArray(0);
+                                            if (jSONArray3.length() == 0) {
+                                                scheme.setYear(2022);
+                                                scheme.setMonth(12);
+                                                scheme.setDay(13);
+                                            } else {
+                                                String[] split = jSONArray3.getString(1).split("-");
+                                                scheme.setYear(Integer.parseInt(split[0]));
+                                                scheme.setMonth(Integer.parseInt(split[1]));
+                                                scheme.setDay(Integer.parseInt(split[2]));
+                                            }
                                         }
-                                    }
-                                }
-                                JSONArray locations = data.getJSONArray("locations");
-                                if(locations.length() == 0){
-                                    scheme.setLocation("未知");
-                                } else {
-                                    String location = locations.getString(0);
-                                    scheme.setLocation(location);
-                                }
-                                boolean is_agenda = data.getBoolean("is_agenda");
-                                boolean confidence_high = data.getBoolean("confidence_high");
-
-                                if(confidence_high)
-                                {
-                                    DbHandler.insertScheme(MainActivity.schemeDB, "schemes", scheme);
-                                    if(scheme.getYear() == MainActivity.selectedYear && scheme.getMonth() == MainActivity.selectedMonth && scheme.getDay() == MainActivity.selectedDay){
-                                        MainActivity.schemeList.add(scheme);
-                                        MainActivity.adapter.notifyDataSetChanged();
-                                    }
-                                } else if(is_agenda){
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        XPopup.requestOverlayPermission(context, new XPermission.SimpleCallback() {
-                                            @Override
-                                            public void onGranted() {
-                                                new XPopup.Builder(context)
-                                                        .isDarkTheme(true)
-                                                        .enableShowWhenAppBackground(true)
-                                                        .asCustom(new PopupWindow(context, scheme, raw_text))
-                                                        .show();
+                                        JSONArray jSONArray4 = jSONObject.getJSONArray("times");
+                                        if (jSONArray4.length() == 0) {
+                                            scheme.setStartTime("00:00");
+                                            scheme.setEndTime("23:59");
+                                        } else {
+                                            JSONArray jSONArray5 = jSONArray4.getJSONArray(0);
+                                            if (jSONArray5.length() == 0) {
+                                                scheme.setStartTime("00:00");
+                                                scheme.setEndTime("23:59");
+                                            } else {
+                                                String[] split2 = jSONArray5.getString(1).split(":");
+                                                scheme.setStartTime(split2[0] + ":" + split2[1]);
+                                                if (Integer.parseInt(split2[0]) < 23) {
+                                                    scheme.setEndTime(String.valueOf(Integer.parseInt(split2[0]) + 1) + ":" + split2[1]);
+                                                } else {
+                                                    scheme.setEndTime("23:59");
+                                                }
                                             }
-                                            @Override
-                                            public void onDenied() {
-
+                                        }
+                                        JSONArray jSONArray6 = jSONObject.getJSONArray("locations");
+                                        if (jSONArray6.length() == 0) {
+                                            scheme.setLocation("未知");
+                                        } else {
+                                            scheme.setLocation(jSONArray6.getString(0));
+                                        }
+                                        boolean z = jSONObject.getBoolean("is_agenda");
+                                        boolean z2 = jSONObject.getBoolean("confidence_high");
+                                        if (!z) {
+                                            return;
+                                        }
+                                        if (z2) {
+                                            DbHandler.insertScheme(MainActivity.schemeDB, "schemes", scheme);
+                                            if (scheme.getYear() == MainActivity.selectedYear && scheme.getMonth() == MainActivity.selectedMonth && scheme.getDay() == MainActivity.selectedDay) {
+                                                Message message = new Message();
+                                                message.what = 2;
+                                                message.obj = scheme;
+                                                MainActivity.mhandler.sendMessage(message);
+                                                return;
                                             }
-                                        });
+                                            return;
+                                        }
+                                        Message message2 = new Message();
+                                        message2.what = 1;
+                                        message2.obj = scheme;
+                                        MainActivity.mhandler.sendMessage(message2);
                                     }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
     }

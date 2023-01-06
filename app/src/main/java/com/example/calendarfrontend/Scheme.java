@@ -8,6 +8,7 @@ public class Scheme {
     private int day;
     private String title;
     private String location;
+    private String raw_text;
     private String startTime;
     private String endTime;
 
@@ -64,5 +65,11 @@ public class Scheme {
     }
     public void setEndTime(String endTime) {
         this.endTime = endTime;
+    }
+    public String getRaw_text() {
+        return raw_text;
+    }
+    public void setRaw_text(String raw_text) {
+        this.raw_text = raw_text;
     }
 }

@@ -11,6 +11,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -22,8 +24,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileObserver;
 import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.telephony.SmsMessage;
+import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -64,6 +68,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -95,6 +100,9 @@ public class MainActivity extends AppCompatActivity implements
     public static int selectedDay;
     private IntentFilter filter;
     private SmsReceiver receiver;
+    public static Handler mhandler;
+    public String lastClipboard = "";
+    public static StringBuilder lastMessage = new StringBuilder();
 
     private static final int REQUEST_CODE_FOR_OVERLAY_PERMISSION = 0x201;
     private final String TAG = "Screenshot";
@@ -174,11 +182,25 @@ public class MainActivity extends AppCompatActivity implements
         selectedYear = mCalendarView.getCurYear();
         selectedMonth = mCalendarView.getCurMonth();
         selectedDay = mCalendarView.getCurDay();
+        mhandler = new Handler(new Handler.Callback() {
+            public boolean handleMessage(Message message) {
+                if (message.what == 1) {
+                    new XPopup.Builder(MainActivity.this).isDarkTheme(true).enableShowWhenAppBackground(true).asCustom(new PopupWindow(MainActivity.this, (Scheme) message.obj)).show();
+                    return false;
+                } else if (message.what != 2) {
+                    return false;
+                } else {
+                    MainActivity.schemeList.add((Scheme) message.obj);
+                    MainActivity.adapter.notifyDataSetChanged();
+                    return false;
+                }
+            }
+        });
 
         schemeDB = this.openOrCreateDatabase("SchemeDB", Context.MODE_PRIVATE, null);
         DbHandler.createTable(schemeDB, "schemes");
 
-        Toast.makeText(MainActivity.this, PATH, Toast.LENGTH_SHORT).show();
+//        Toast.makeText(MainActivity.this, PATH, Toast.LENGTH_SHORT).show();
 
         schemeList = DbHandler.fetchScheme(schemeDB, "schemes", selectedYear, selectedMonth, selectedDay);
         adapter = new SchemeAdapter(this, R.layout.item, schemeList);
@@ -194,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements
                     .isDarkTheme(true)
                     .maxWidth(800)
                     .asConfirm("确定删除该日程吗？", "", () -> {
-                        // Todo: 发送给服务器
                         Scheme mScheme = schemeList.get(position);
                         if(mScheme.getId() != -1) {
                             OkHttpClient client = new OkHttpClient.Builder()
@@ -312,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements
             new XPopup.Builder(this)
                     .isDarkTheme(true)
                     .atView(mSetting)
-                    .asAttachList(new String[]{"跳转到指定日期", "同步到系统日历", "退出当前账号"}, null, (position, text) -> {
+                    .asAttachList(new String[]{"跳转到指定日期", "退出当前账号"}, null, (position, text) -> {
                         switch(position){
                             case 0:
                                 new XPopup.Builder(MainActivity.this)
@@ -321,8 +342,6 @@ public class MainActivity extends AppCompatActivity implements
                                         .show();
                                 break;
                             case 1:
-                                break;
-                            case 2:
                                 Intent MaintoLogin=new Intent(MainActivity.this,LoginActivity.class);
                                 startActivity(MaintoLogin);
                                 break;
@@ -336,6 +355,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         mFileObserver.startWatching();
+        getClipboardData();
 //        Log.d(TAG, PATH);
     }
 
@@ -388,129 +408,107 @@ public class MainActivity extends AppCompatActivity implements
                 photomap.put(path,"1");
             }
         }
-        MediaType JSON = MediaType.parse("application/json;charset=utf-8");
-        JSONArray ja = new JSONArray();
+        MediaType parse = MediaType.parse("application/json;charset=utf-8");
+        JSONArray jSONArray = new JSONArray();
         System.out.println(imageToBase64Str(path));
-        ja.put(imageToBase64Str(path));
-        JSONObject photo = new JSONObject();
+        jSONArray.put(imageToBase64Str(path));
+        JSONObject jSONObject = new JSONObject();
         try {
-            photo.put("data",ja);
-        }
-        catch (JSONException e) {
+            jSONObject.put("data", jSONArray);
+        } catch (JSONException e) {
             e.printStackTrace();
         }
-        System.out.println(ja);
-        OkHttpClient client = new OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .cookieJar(CookieJarManager.cookieJar)//自动管理Cookie
-                .build();
-        Request.Builder reqBuilder = new Request.Builder();
-        RequestBody requestBody = RequestBody.create(JSON, String.valueOf(photo));
-        Request request = reqBuilder
-                .url(getString(R.string.neturl)+"/tsingenda/image/")
-                .post(requestBody)
-                .build();
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
+        System.out.println(jSONArray);
+        OkHttpClient build = new OkHttpClient.Builder().retryOnConnectionFailure(true).cookieJar(CookieJarManager.cookieJar).build();
+        Request.Builder builder = new Request.Builder();
+        build.newCall(builder.url("http://123.125.240.150:37511/tsingenda/image/").post(RequestBody.create(parse, String.valueOf(jSONObject))).build()).enqueue(new Callback() {
+            public void onFailure(Call call, final IOException iOException) {
+                MainActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
-                        //  aBuilder.dismiss();
-                        Toast.makeText(getApplicationContext(),"上传失败",Toast.LENGTH_SHORT).show();
+                        Context applicationContext = MainActivity.this.getApplicationContext();
+                        Toast.makeText(applicationContext, "上传失败:" + iOException.toString(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
 
-            @Override
             public void onResponse(Call call, Response response) throws IOException {
                 System.out.println(response.toString());
-                //TODO:add response to user
-                if(response.isSuccessful())
-                {
+                if (response.isSuccessful()) {
                     try {
-                        JSONObject jo = new JSONObject(response.body().string());
-                        JSONArray dataArray = jo.getJSONArray("data");
-                        JSONObject data = dataArray.getJSONObject(0);
-
-                        String raw_text = data.getString("raw_text");
-                        Scheme scheme = new Scheme();
-                        scheme.setId(data.getInt("id"));
-                        scheme.setConf_id(data.getInt("conf_id"));
-                        scheme.setTitle(data.getString("title"));
-
-                        JSONArray dates = data.getJSONArray("dates");
-                        if(dates.length() == 0){
-                            scheme.setYear(2022);
-                            scheme.setMonth(12);
-                            scheme.setDay(13);
-                        } else {
-                            JSONArray date = dates.getJSONArray(0);
-                            if(date.length() <= 1){
+                        JSONArray jSONArray = new JSONObject(response.body().string()).getJSONArray("data");
+                        if (jSONArray.length() != 0) {
+                            JSONObject jSONObject = jSONArray.getJSONObject(0);
+                            final Scheme scheme = new Scheme();
+                            scheme.setId(jSONObject.getInt("id"));
+                            scheme.setConf_id(jSONObject.getInt("conf_id"));
+                            scheme.setTitle(jSONObject.getString("title"));
+                            scheme.setRaw_text(jSONObject.getString("raw_text"));
+                            JSONArray jSONArray2 = jSONObject.getJSONArray("dates");
+                            if (jSONArray2.length() == 0) {
                                 scheme.setYear(2022);
                                 scheme.setMonth(12);
                                 scheme.setDay(13);
                             } else {
-                                String Nums = date.getString(1);
-                                String[] Num = Nums.split("-");
-                                scheme.setYear(Integer.parseInt(Num[0]));
-                                scheme.setMonth(Integer.parseInt(Num[1]));
-                                scheme.setDay(Integer.parseInt(Num[2]));
+                                JSONArray jSONArray3 = jSONArray2.getJSONArray(0);
+                                if (jSONArray3.length() <= 1) {
+                                    scheme.setYear(2022);
+                                    scheme.setMonth(12);
+                                    scheme.setDay(13);
+                                } else {
+                                    String[] split = jSONArray3.getString(1).split("-");
+                                    scheme.setYear(Integer.parseInt(split[0]));
+                                    scheme.setMonth(Integer.parseInt(split[1]));
+                                    scheme.setDay(Integer.parseInt(split[2]));
+                                }
                             }
-                        }
-                        JSONArray times = data.getJSONArray("times");
-                        if(times.length() == 0){
-                            scheme.setStartTime("00:00");
-                            scheme.setEndTime("23:59");
-                        } else {
-                            JSONArray time = times.getJSONArray(0);
-                            if(time.length() == 0){
+                            JSONArray jSONArray4 = jSONObject.getJSONArray("times");
+                            if (jSONArray4.length() == 0) {
                                 scheme.setStartTime("00:00");
                                 scheme.setEndTime("23:59");
                             } else {
-                                String Nums = time.getString(1);
-                                String[] Num = Nums.split(":");
-                                scheme.setStartTime(Nums);
-                                if(Integer.parseInt(Num[0]) < 23){
-                                    scheme.setEndTime(String.valueOf(Integer.parseInt(Num[0])+1) + ":" + Num[1]);
-                                } else {
+                                JSONArray jSONArray5 = jSONArray4.getJSONArray(0);
+                                if (jSONArray5.length() == 0) {
+                                    scheme.setStartTime("00:00");
                                     scheme.setEndTime("23:59");
+                                } else {
+                                    String[] split2 = jSONArray5.getString(1).split(":");
+                                    scheme.setStartTime(split2[0] + ":" + split2[1]);
+                                    if (Integer.parseInt(split2[0]) < 23) {
+                                        scheme.setEndTime(String.valueOf(Integer.parseInt(split2[0]) + 1) + ":" + split2[1]);
+                                    } else {
+                                        scheme.setEndTime("23:59");
+                                    }
                                 }
                             }
-                        }
-                        JSONArray locations = data.getJSONArray("locations");
-                        if(locations.length() == 0){
-                            scheme.setLocation("未知");
-                        } else {
-                            String location = locations.getString(0);
-                            scheme.setLocation(location);
-                        }
-                        boolean is_agenda = data.getBoolean("is_agenda");
-                        boolean confidence_high = data.getBoolean("confidence_high");
-                        if(confidence_high)
-                        {
-                            DbHandler.insertScheme(schemeDB, "schemes", scheme);
-                            if(scheme.getYear() ==selectedYear && scheme.getMonth() == selectedMonth && scheme.getDay() == selectedDay){
-                                schemeList.add(scheme);
-                                adapter.notifyDataSetChanged();
+                            JSONArray jSONArray6 = jSONObject.getJSONArray("locations");
+                            if (jSONArray6.length() == 0) {
+                                scheme.setLocation("未知");
+                            } else {
+                                scheme.setLocation(jSONArray6.getString(0));
                             }
-                        } else if(is_agenda){
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                XPopup.requestOverlayPermission(MainActivity.this, new XPermission.SimpleCallback() {
-                                    @Override
-                                    public void onGranted() {
-                                        new XPopup.Builder(MainActivity.this)
-                                                .isDarkTheme(true)
-                                                .enableShowWhenAppBackground(true)
-                                                .asCustom(new PopupWindow(MainActivity.this, scheme, raw_text))
-                                                .show();
-                                    }
-                                    @Override
-                                    public void onDenied() {
-                                    }
-                                });
+                            boolean z = jSONObject.getBoolean("is_agenda");
+                            boolean z2 = jSONObject.getBoolean("confidence_high");
+                            if (!z) {
+                                return;
                             }
+                            if (z2) {
+                                DbHandler.insertScheme(MainActivity.schemeDB, "schemes", scheme);
+                                if (scheme.getYear() == MainActivity.selectedYear && scheme.getMonth() == MainActivity.selectedMonth && scheme.getDay() == MainActivity.selectedDay) {
+                                    MainActivity.this.runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            MainActivity.schemeList.add(scheme);
+                                            MainActivity.adapter.notifyDataSetChanged();
+                                        }
+                                    });
+                                    return;
+                                }
+                                return;
+                            }
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    new XPopup.Builder(MainActivity.this).isDarkTheme(true).enableShowWhenAppBackground(true).asCustom(new PopupWindow(MainActivity.this, scheme)).show();
+                                }
+                            });
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -631,6 +629,129 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onClick(View v) {
 
+    }
+
+    private void getClipboardData() {
+        getWindow().getDecorView().post(new Runnable() {
+            public void run() {
+                if (MainActivity.this.fetchClipboard() != null && !Objects.equals(MainActivity.this.fetchClipboard(), MainActivity.this.lastClipboard)) {
+                    MainActivity mainActivity = MainActivity.this;
+                    String unused = mainActivity.lastClipboard = mainActivity.fetchClipboard();
+                    MediaType parse = MediaType.parse("application/json;charset=utf-8");
+                    JSONArray jSONArray = new JSONArray();
+                    jSONArray.put(MainActivity.this.lastClipboard);
+                    JSONObject jSONObject = new JSONObject();
+                    try {
+                        jSONObject.put("data", jSONArray);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(jSONArray);
+                    OkHttpClient build = new OkHttpClient.Builder().retryOnConnectionFailure(true).cookieJar(CookieJarManager.cookieJar).build();
+                    Request.Builder builder = new Request.Builder();
+                    build.newCall(builder.url("http://123.125.240.150:37511/tsingenda/raw_text/").post(RequestBody.create(parse, String.valueOf(jSONObject))).build()).enqueue(new Callback() {
+                        public void onFailure(Call call, IOException iOException) {
+                        }
+
+                        public void onResponse(Call call, Response response) throws IOException {
+                            System.out.println(response.toString());
+                            if (response.isSuccessful()) {
+                                try {
+                                    JSONArray jSONArray = new JSONObject(response.body().string()).getJSONArray("data");
+                                    if (jSONArray.length() != 0) {
+                                        JSONObject jSONObject = jSONArray.getJSONObject(0);
+                                        Scheme scheme = new Scheme();
+                                        scheme.setId(jSONObject.getInt("id"));
+                                        scheme.setConf_id(jSONObject.getInt("conf_id"));
+                                        scheme.setTitle(jSONObject.getString("title"));
+                                        scheme.setRaw_text(jSONObject.getString("raw_text"));
+                                        JSONArray jSONArray2 = jSONObject.getJSONArray("dates");
+                                        if (jSONArray2.length() == 0) {
+                                            scheme.setYear(2022);
+                                            scheme.setMonth(12);
+                                            scheme.setDay(13);
+                                        } else {
+                                            JSONArray jSONArray3 = jSONArray2.getJSONArray(0);
+                                            if (jSONArray3.length() == 0) {
+                                                scheme.setYear(2022);
+                                                scheme.setMonth(12);
+                                                scheme.setDay(13);
+                                            } else {
+                                                String[] split = jSONArray3.getString(1).split("-");
+                                                scheme.setYear(Integer.parseInt(split[0]));
+                                                scheme.setMonth(Integer.parseInt(split[1]));
+                                                scheme.setDay(Integer.parseInt(split[2]));
+                                            }
+                                        }
+                                        JSONArray jSONArray4 = jSONObject.getJSONArray("times");
+                                        if (jSONArray4.length() == 0) {
+                                            scheme.setStartTime("00:00");
+                                            scheme.setEndTime("23:59");
+                                        } else {
+                                            JSONArray jSONArray5 = jSONArray4.getJSONArray(0);
+                                            if (jSONArray5.length() == 0) {
+                                                scheme.setStartTime("00:00");
+                                                scheme.setEndTime("23:59");
+                                            } else {
+                                                String[] split2 = jSONArray5.getString(1).split(":");
+                                                scheme.setStartTime(split2[0] + ":" + split2[1]);
+                                                if (Integer.parseInt(split2[0]) < 23) {
+                                                    scheme.setEndTime(String.valueOf(Integer.parseInt(split2[0]) + 1) + ":" + split2[1]);
+                                                } else {
+                                                    scheme.setEndTime("23:59");
+                                                }
+                                            }
+                                        }
+                                        JSONArray jSONArray6 = jSONObject.getJSONArray("locations");
+                                        if (jSONArray6.length() == 0) {
+                                            scheme.setLocation("未知");
+                                        } else {
+                                            scheme.setLocation(jSONArray6.getString(0));
+                                        }
+                                        boolean z = jSONObject.getBoolean("is_agenda");
+                                        boolean z2 = jSONObject.getBoolean("confidence_high");
+                                        if (!z) {
+                                            return;
+                                        }
+                                        if (z2) {
+                                            DbHandler.insertScheme(MainActivity.schemeDB, "schemes", scheme);
+                                            if (scheme.getYear() == MainActivity.selectedYear && scheme.getMonth() == MainActivity.selectedMonth && scheme.getDay() == MainActivity.selectedDay) {
+                                                Message message = new Message();
+                                                message.what = 2;
+                                                message.obj = scheme;
+                                                MainActivity.mhandler.sendMessage(message);
+                                                return;
+                                            }
+                                            return;
+                                        }
+                                        Message message2 = new Message();
+                                        message2.what = 1;
+                                        message2.obj = scheme;
+                                        MainActivity.mhandler.sendMessage(message2);
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public String fetchClipboard() {
+        ClipData primaryClip;
+        ClipData.Item itemAt;
+        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboardManager == null || !clipboardManager.hasPrimaryClip() || (primaryClip = clipboardManager.getPrimaryClip()) == null || primaryClip.getItemCount() <= 0 || (itemAt = primaryClip.getItemAt(0)) == null) {
+            return null;
+        }
+        CharSequence text = itemAt.getText();
+        if (!TextUtils.isEmpty(text)) {
+            return text.toString();
+        }
+        return null;
     }
 }
 

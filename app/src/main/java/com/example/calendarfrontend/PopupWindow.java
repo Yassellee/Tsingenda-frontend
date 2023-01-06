@@ -34,15 +34,13 @@ import okhttp3.Response;
 @SuppressLint("ViewConstructor")
 public class PopupWindow extends CenterPopupView {
     private final Scheme mScheme;
-    private final String raw_text;
     private TextView mSource;
     private EditText mTitle, mDate, mLocation, mStartTime, mEndTime;
     private OkHttpClient client;
 
-    public PopupWindow(Context context, Scheme scheme, String raw_text) {
+    public PopupWindow(Context context, Scheme scheme) {
         super(context);
         mScheme = scheme;
-        this.raw_text = raw_text;
     }
 
     @Override
@@ -61,7 +59,7 @@ public class PopupWindow extends CenterPopupView {
         mStartTime = findViewById(R.id.tv_startTime);
         mEndTime = findViewById(R.id.tv_endTime);
 
-        mSource.setText(raw_text);
+        mSource.setText(mScheme.getRaw_text());
         mTitle.setText(mScheme.getTitle());
         mDate.setText(mScheme.getYear() + "-" + mScheme.getMonth() + "-" + mScheme.getDay());
         mLocation.setText(mScheme.getLocation());
@@ -80,64 +78,53 @@ public class PopupWindow extends CenterPopupView {
             mScheme.setEndTime(mEndTime.getText().toString());
             String[] date = mDate.getText().toString().split("-");
             if(mScheme.getTitle().equals("")) {
-//                Toast.makeText(getContext(), "标题不能为空", Toast.LENGTH_SHORT).show();
                 return;
             }
             if(date.length != 3){
-//                Toast.makeText(getContext(), "日期格式错误", Toast.LENGTH_SHORT).show();
                 return;
             }
             int year = Integer.parseInt(date[0]);
             int month = Integer.parseInt(date[1]);
             int day = Integer.parseInt(date[2]);
             if(!checkdate(year, month, day)){
-//                Toast.makeText(getContext(), "日期格式错误", Toast.LENGTH_SHORT).show();
                 return;
             }
             if(!checktime(mScheme.getStartTime(), mScheme.getEndTime())){
-//                Toast.makeText(getContext(), "时间格式错误", Toast.LENGTH_SHORT).show();
                 return;
             }
+            mScheme.setYear(year);
+            mScheme.setMonth(month);
+            mScheme.setDay(day);
             DbHandler.insertScheme(MainActivity.schemeDB, "schemes", mScheme);
-            // TODO: 反馈给后端
-            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
-            JSONObject jo = new JSONObject();
+            if (year == MainActivity.selectedYear && month == MainActivity.selectedMonth && day == MainActivity.selectedDay) {
+                MainActivity.schemeList.add(this.mScheme);
+                MainActivity.adapter.notifyDataSetChanged();
+            }
+            MediaType parse = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jSONObject = new JSONObject();
             try {
-                jo.put("id", mScheme.getId());
-                jo.put("conf_id", mScheme.getConf_id());
-                jo.put("is_agenda", true);
-                jo.put("confidence_high", true);
+                jSONObject.put("id", this.mScheme.getId());
+                jSONObject.put("conf_id", this.mScheme.getConf_id());
+                jSONObject.put("is_agenda", true);
+                jSONObject.put("confidence_high", true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            JSONArray ja = new JSONArray();
-            ja.put(jo);
-            JSONObject feedback = new JSONObject();
+            JSONArray jSONArray = new JSONArray();
+            jSONArray.put(jSONObject);
+            JSONObject jSONObject2 = new JSONObject();
             try {
-                feedback.put("data",ja);
+                jSONObject2.put("data", jSONArray);
+            } catch (JSONException e2) {
+                e2.printStackTrace();
             }
-            catch (JSONException e) {
-                e.printStackTrace();
-            }
-            RequestBody body = RequestBody.create(JSON, feedback.toString());
-            Request request = new Request.Builder()
-                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
-                    .post(body)
-                    .build();
-            Call call = client.newCall(request);
-            call.enqueue(new Callback()
-            {
-                @Override
-                public void onFailure(Call call, IOException e)
-                {
-                    e.printStackTrace();
+            this.client.newCall(new Request.Builder().url("http://123.125.240.150:37511/tsingenda/feedback/").post(RequestBody.create(parse, jSONObject2.toString())).build()).enqueue(new Callback() {
+                public void onFailure(Call call, IOException iOException) {
+                    iOException.printStackTrace();
                 }
-                @Override
-                public void onResponse(Call call, Response response) throws IOException
-                {
-                    //此方法运行在子线程中，不能在此方法中进行UI操作。
-                    if(!response.isSuccessful())
-                    {
+
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (!response.isSuccessful()) {
                         throw new IOException("Unexpected code " + response);
                     }
                 }
@@ -146,45 +133,31 @@ public class PopupWindow extends CenterPopupView {
         });
         findViewById(R.id.btn_ignore).setOnClickListener(v -> {
             // 忽略日程
-            // TODO: 反馈给后端
-            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
-            JSONObject jo = new JSONObject();
+            MediaType parse = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jSONObject = new JSONObject();
             try {
-                jo.put("id", mScheme.getId());
-                jo.put("conf_id", mScheme.getConf_id());
-                jo.put("is_agenda", true);
-                jo.put("confidence_high", false);
+                jSONObject.put("id", this.mScheme.getId());
+                jSONObject.put("conf_id", this.mScheme.getConf_id());
+                jSONObject.put("is_agenda", true);
+                jSONObject.put("confidence_high", false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            JSONArray ja = new JSONArray();
-            ja.put(jo);
-            JSONObject feedback = new JSONObject();
+            JSONArray jSONArray = new JSONArray();
+            jSONArray.put(jSONObject);
+            JSONObject jSONObject2 = new JSONObject();
             try {
-                feedback.put("data",ja);
+                jSONObject2.put("data", jSONArray);
+            } catch (JSONException e2) {
+                e2.printStackTrace();
             }
-            catch (JSONException e) {
-                e.printStackTrace();
-            }
-            RequestBody body = RequestBody.create(JSON, feedback.toString());
-            Request request = new Request.Builder()
-                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
-                    .post(body)
-                    .build();
-            Call call = client.newCall(request);
-            call.enqueue(new Callback()
-            {
-                @Override
-                public void onFailure(Call call, IOException e)
-                {
-                    e.printStackTrace();
+            this.client.newCall(new Request.Builder().url("http://123.125.240.150:37511/tsingenda/feedback/").post(RequestBody.create(parse, jSONObject2.toString())).build()).enqueue(new Callback() {
+                public void onFailure(Call call, IOException iOException) {
+                    iOException.printStackTrace();
                 }
-                @Override
-                public void onResponse(Call call, Response response) throws IOException
-                {
-                    //此方法运行在子线程中，不能在此方法中进行UI操作。
-                    if(!response.isSuccessful())
-                    {
+
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (!response.isSuccessful()) {
                         throw new IOException("Unexpected code " + response);
                     }
                 }
@@ -193,45 +166,31 @@ public class PopupWindow extends CenterPopupView {
         });
         findViewById(R.id.btn_ignore).setOnClickListener(v -> {
             // 不是日程
-            // TODO: 反馈给后端
-            MediaType JSON = MediaType.parse("application/json;charset=utf-8");
-            JSONObject jo = new JSONObject();
+            MediaType parse = MediaType.parse("application/json;charset=utf-8");
+            JSONObject jSONObject = new JSONObject();
             try {
-                jo.put("id", mScheme.getId());
-                jo.put("conf_id", mScheme.getConf_id());
-                jo.put("is_agenda", false);
-                jo.put("confidence_high", false);
+                jSONObject.put("id", this.mScheme.getId());
+                jSONObject.put("conf_id", this.mScheme.getConf_id());
+                jSONObject.put("is_agenda", false);
+                jSONObject.put("confidence_high", false);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            JSONArray ja = new JSONArray();
-            ja.put(jo);
-            JSONObject feedback = new JSONObject();
+            JSONArray jSONArray = new JSONArray();
+            jSONArray.put(jSONObject);
+            JSONObject jSONObject2 = new JSONObject();
             try {
-                feedback.put("data",ja);
+                jSONObject2.put("data", jSONArray);
+            } catch (JSONException e2) {
+                e2.printStackTrace();
             }
-            catch (JSONException e) {
-                e.printStackTrace();
-            }
-            RequestBody body = RequestBody.create(JSON, feedback.toString());
-            Request request = new Request.Builder()
-                    .url("http://123.125.240.150:37511/tsingenda/feedback/")
-                    .post(body)
-                    .build();
-            Call call = client.newCall(request);
-            call.enqueue(new Callback()
-            {
-                @Override
-                public void onFailure(Call call, IOException e)
-                {
-                    e.printStackTrace();
+            this.client.newCall(new Request.Builder().url("http://123.125.240.150:37511/tsingenda/feedback/").post(RequestBody.create(parse, jSONObject2.toString())).build()).enqueue(new Callback() {
+                public void onFailure(Call call, IOException iOException) {
+                    iOException.printStackTrace();
                 }
-                @Override
-                public void onResponse(Call call, Response response) throws IOException
-                {
-                    //此方法运行在子线程中，不能在此方法中进行UI操作。
-                    if(!response.isSuccessful())
-                    {
+
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (!response.isSuccessful()) {
                         throw new IOException("Unexpected code " + response);
                     }
                 }

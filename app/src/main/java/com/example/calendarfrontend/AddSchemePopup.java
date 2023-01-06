@@ -38,6 +38,7 @@ public class AddSchemePopup extends CenterPopupView {
             // 加入日程
             Scheme mScheme = new Scheme();
             mScheme.setTitle(mTitle.getText().toString());
+            mScheme.setRaw_text(mScheme.getTitle());
             mScheme.setLocation(mLocation.getText().toString());
             mScheme.setStartTime(mStartTime.getText().toString());
             mScheme.setEndTime(mEndTime.getText().toString());
