@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="firsttextbias">0.4</dimen>
+    <dimen name="regbias">0.3</dimen>
+    <dimen name="textwidth">200dp</dimen>
+    <dimen name="textheight">60dp</dimen>
+    <dimen name="textgap">20dp</dimen>
+    <dimen name="buttonwidth">100dp</dimen>
+    <string name="emailhint">请输入您的手机号</string>
+    <string name="passwordhint">请设置密码</string>
+    <string name="againpasswordhint">请输入确认密码</string>
+    <string name="zhuce">注册</string>
+    <string name="denglu">登陆</string>
+    <string name="yanzhengmahint">请输入验证码</string>
+    <string name="sendvcode">发送验证码</string>
+    <string name="alreadysend">验证码已发送</string>
+    <dimen name="tittlebarheight">60dp</dimen>
+    <dimen name="tittlebarfrontsize">18dp</dimen>
+
+</resources>

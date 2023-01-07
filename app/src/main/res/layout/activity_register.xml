@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#e3f4fe"
+    tools:context=".RegisterActivity">
+
+    <EditText
+        android:id="@+id/remail"
+        android:layout_width="@dimen/textwidth"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackground"
+        android:hint="@string/emailhint"
+        android:inputType="textEmailAddress"
+        android:layout_marginLeft="@dimen/textheight"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="@dimen/firsttextbias" />
+
+    <ImageView
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:src="@drawable/time3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0"/>
+
+
+    <ImageView
+        android:id="@+id/touxiang"
+        android:layout_width="@dimen/textheight"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackgroud2"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="@dimen/firsttextbias"
+        app:layout_constraintRight_toLeftOf="@id/remail" />
+
+    <ImageView
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:src="@drawable/my"
+        app:layout_constraintTop_toTopOf="@id/touxiang"
+        app:layout_constraintLeft_toLeftOf="@id/touxiang"
+        app:layout_constraintRight_toRightOf="@id/touxiang"
+        app:layout_constraintBottom_toBottomOf="@id/touxiang"
+        />
+
+
+    <EditText
+        android:id="@+id/rpassword"
+        android:layout_width="@dimen/textwidth"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackground"
+        android:hint="@string/passwordhint"
+        android:inputType="textPassword"
+        android:layout_marginTop="@dimen/textgap"
+        app:layout_constraintTop_toBottomOf="@id/remail"
+        app:layout_constraintLeft_toLeftOf="@id/remail"
+        app:layout_constraintRight_toRightOf="@id/remail" />
+
+    <ImageView
+        android:id="@+id/mima"
+        android:layout_width="@dimen/textheight"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackgroud2"
+        android:scaleType="centerInside"
+        android:layout_marginTop="@dimen/textgap"
+        app:layout_constraintTop_toBottomOf="@id/touxiang"
+        app:layout_constraintLeft_toLeftOf="@id/touxiang"
+        app:layout_constraintRight_toRightOf="@id/touxiang" />
+
+    <ImageView
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:src="@drawable/mima"
+        app:layout_constraintTop_toTopOf="@id/mima"
+        app:layout_constraintLeft_toLeftOf="@id/mima"
+        app:layout_constraintRight_toRightOf="@id/mima"
+        app:layout_constraintBottom_toBottomOf="@id/mima"
+        />
+
+
+
+    <EditText
+        android:id="@+id/rerpassword"
+        android:layout_width="@dimen/textwidth"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackground"
+        android:hint="@string/againpasswordhint"
+        android:inputType="textPassword"
+        android:layout_marginTop="@dimen/textgap"
+        app:layout_constraintTop_toBottomOf="@id/rpassword"
+        app:layout_constraintLeft_toLeftOf="@id/rpassword"
+        app:layout_constraintRight_toRightOf="@id/rpassword" />
+
+    <ImageView
+        android:id="@+id/remima"
+        android:layout_width="@dimen/textheight"
+        android:layout_height="@dimen/textheight"
+        android:background="@drawable/editbackgroud2"
+        android:scaleType="centerInside"
+        android:layout_marginTop="@dimen/textgap"
+        app:layout_constraintTop_toBottomOf="@id/mima"
+        app:layout_constraintLeft_toLeftOf="@id/mima"
+        app:layout_constraintRight_toRightOf="@id/mima" />
+
+    <ImageView
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:src="@drawable/mima"
+        app:layout_constraintTop_toTopOf="@id/remima"
+        app:layout_constraintLeft_toLeftOf="@id/remima"
+        app:layout_constraintRight_toRightOf="@id/remima"
+        app:layout_constraintBottom_toBottomOf="@id/remima"
+        />
+
+    <Button
+        android:id="@+id/regist"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/circle"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rerpassword" />
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/right"
+        app:layout_constraintBottom_toBottomOf="@id/regist"
+        app:layout_constraintTop_toTopOf="@id/regist"
+        app:layout_constraintLeft_toLeftOf="@id/regist"
+        app:layout_constraintRight_toRightOf="@id/regist"/>
+
+    <Button
+        android:id="@+id/tologin"
+        android:layout_width="@dimen/buttonwidth"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="#00000000"
+        android:text="返回登录页"
+        android:textColor="#505587"
+        android:textSize="15dp"
+        app:layout_constraintLeft_toLeftOf="@id/regist"
+        app:layout_constraintTop_toBottomOf="@id/regist" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

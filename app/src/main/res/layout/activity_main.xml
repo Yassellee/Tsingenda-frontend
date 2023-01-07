@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".MainActivity"
+    tools:ignore="HardcodedText,RtlSymmetry, ExtraText">
+
+<!--    <ImageView-->
+<!--        android:id="@+id/screenshot"-->
+<!--        android:layout_width="300dp"-->
+<!--        android:layout_height="500dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        android:visibility="gone"/>-->
+
+    <RelativeLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_alignParentTop="true"
+        >
+        <TextView
+            android:id="@+id/currentMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_marginStart="20dp"
+            android:text="2022年11月"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/search"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="12dp"
+            android:layout_toStartOf="@+id/setting"
+            android:background="@drawable/bg_ripple"
+            android:padding="4dp"
+            android:src="@mipmap/ic_search"
+            android:contentDescription="search"/>
+        <ImageView
+            android:id="@+id/setting"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bg_ripple"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:src="@mipmap/ic_setting"
+            android:contentDescription="setting"/>
+    </RelativeLayout>
+    <com.haibin.calendarview.CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar"
+        app:calendar_padding="10dp"
+        app:current_month_lunar_text_color="#CFCFCF"
+        app:current_month_text_color="#333333"
+        app:month_view="com.example.calendarfrontend.CalendarMonthView"
+        app:month_view_show_mode="mode_fix"
+        app:other_month_lunar_text_color="#e1e1e1"
+        app:other_month_text_color="#e1e1e1"
+        app:selected_lunar_text_color="#fff"
+        app:selected_text_color="#fff"
+        app:selected_theme_color="#046cea"
+        app:week_background="#fff"
+        app:week_start_with="sun"
+        app:week_text_color="#e1e1e1"
+        app:week_view="com.example.calendarfrontend.CalendarWeekView"
+        app:year_view_day_text_color="#333333"
+        app:year_view_day_text_size="7sp"
+        app:year_view_month_text_color="#ff0000"
+        app:year_view_month_text_size="20sp"
+        app:year_view_scheme_color="#f17706"
+        app:year_view_select_text_color="#fff"
+        app:year_view_week_height="12dp"
+        app:year_view_week_text_color="#e1e1e1"
+        app:year_view_week_text_size="6sp"
+        />
+
+    <!--    <TextView-->
+    <!--        android:id="@+id/schemeList_title"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_below="@+id/calendarView"-->
+    <!--        android:layout_marginStart="20dp"-->
+    <!--        android:layout_marginEnd="20dp"-->
+    <!--        android:text="今天"-->
+    <!--        android:textSize="16sp" />-->
+    <ListView
+        android:id="@+id/SchemeList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/calendarView"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:divider="#DDDCDC"
+        android:dividerHeight="1dp" />
+    <FrameLayout
+        android:id="@+id/currentDay"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:layout_above="@+id/fab_add"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:visibility="gone"
+        >
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_current"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:contentDescription="Add"
+            android:elevation="0dp"
+            android:scaleType="center"
+            android:src="@mipmap/ic_calendar"
+            app:backgroundTint="@color/white"
+            app:borderWidth="0dp"
+            app:fabSize="normal"
+            tools:ignore="DuplicateSpeakableTextCheck" />
+
+        <TextView
+            android:id="@+id/text_current"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="20"
+            android:textColor="@color/black"
+            android:elevation="10dp"
+            android:textSize="11sp"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </FrameLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:clickable="true"
+        android:contentDescription="Add"
+        android:scaleType="center"
+        android:src="@mipmap/ic_plus"
+        app:backgroundTint="@color/white"
+        app:borderWidth="0dp"
+        app:elevation="10dp"
+        app:fabSize="normal" />
+
+</RelativeLayout>

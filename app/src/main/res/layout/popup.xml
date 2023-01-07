@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#ffffff"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    tools:ignore="HardcodedText, NestedWeights">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:background="#808080"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:text="日程校验"
+        android:textColor="#333333" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="来源："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <TextView
+            android:id="@+id/tv_source"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Please summit your ppt before 23:59 tonight."
+            android:textSize="15sp"
+            android:maxLines="3"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="标题："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="提交作业"
+            android:textSize="15sp"
+            android:inputType="text"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="日期："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/tv_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2022-12-11"
+            android:textSize="15sp"
+            android:inputType="date"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="开始时间："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/tv_startTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="08:00"
+            android:textSize="15sp"
+            android:inputType="time"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="结束时间："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/tv_endTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="09:35"
+            android:textSize="15sp"
+            android:inputType="time"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="地点："
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+        <EditText
+            android:id="@+id/tv_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="6A301"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:background="#808080"
+            android:text="是日程且将其加入日历"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+        <Button
+            android:id="@+id/btn_ignore"
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:background="#808080"
+            android:text="是日程但选择忽略"
+            android:textSize="15sp"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="75dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:background="#808080"
+            android:text="该事件不是日程"
+            android:textColor="#333333"
+            android:textSize="15sp" />
+
+    </RelativeLayout>
+
+</LinearLayout>
