@@ -56,11 +56,11 @@
 
 下面是`Tsingenda`部分功能的效果展示，测试机型为realme GT Neo2，系统型号为android 12。
 
-<video src="./video/video.mp4"></video>
+![login_and_clip](./images/login_and_clip.gif)		![message](./images/message.gif)		![screenshot](./images/screenshot.gif)	
 
 # Instructions for use
 
-为保证软件的正常运行，需要用户为`Tsingenda`提供悬浮窗、访问存储空间、访问短信内容等权限。
+为保证软件的正常运行，需要用户为`Tsingenda`提供**悬浮窗、访问存储空间、访问短信内容**等权限。
 
 进入软件后，与正常日历界面相似，点击右上角的设置与搜索按钮可以进行"跳转到指定日期"、"查询指定日程"、"退出账号"等基本功能。日历下方会展示当天的日程，点击可进行编辑，长按可以删除日程。
 

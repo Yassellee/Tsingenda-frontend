@@ -164,7 +164,7 @@ public class PopupWindow extends CenterPopupView {
             });
             dismiss();
         });
-        findViewById(R.id.btn_ignore).setOnClickListener(v -> {
+        findViewById(R.id.btn_cancel).setOnClickListener(v -> {
             // 不是日程
             MediaType parse = MediaType.parse("application/json;charset=utf-8");
             JSONObject jSONObject = new JSONObject();
